@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قسم المدفوعات — AMORIA</title>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCHGS6F3sfmon6i2ldSoMA5TaF0hpKR8zY",
+  authDomain: "paiement-app-f73df.firebaseapp.com",
+  projectId: "paiement-app-f73df",
+  storageBucket: "paiement-app-f73df.firebasestorage.app",
+  messagingSenderId: "1019316939373",
+  appId: "1:1019316939373:web:3433a07852972c1922ed64"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const fbDB  = getFirestore(fbApp);
+const COLL  = "paiement";
+const DOCID = "main";
+
+window._fbSave = async function(data) {
+  try { await setDoc(doc(fbDB, COLL, DOCID), { payload: JSON.stringify(data) }); }
+  catch(e) { console.error("FB save:", e); }
+};
+
+window._fbLoad = async function() {
+  try {
+    const snap = await getDoc(doc(fbDB, COLL, DOCID));
+    if(snap.exists()) return JSON.parse(snap.data().payload);
+  } catch(e) { console.error("FB load:", e); }
+  return null;
+};
+
+window._fbListen = function(cb) {
+  return onSnapshot(doc(fbDB, COLL, DOCID), snap => {
+    if(snap.exists()) { try { cb(JSON.parse(snap.data().payload)); } catch(e){} }
+  });
+};
+
+window._fbReady = true;
+if(window._appBootPending) window._appBootPending();
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
+:root{
+  --bg:#f4f4f0;--sur:#fff;--s2:#f0efeb;--s3:#e8e7e2;
+  --brd:rgba(0,0,0,.09);--brd2:rgba(0,0,0,.17);
+  --txt:#1a1a18;--t2:#5a5a56;--t3:#9a9a96;
+  --grn:#1a7a4a;--gbg:#e6f4ed;--gbg2:#b8ddc8;
+  --red:#c0392b;--rbg:#fdecea;
+  --amb:#a05c00;--abg:#fff3e0;
+  --blu:#1a5fa0;--bbg:#e8f0fb;
+  --pur:#6b3fa0;--pbg:#f0ebfb;
+  --r:10px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px}
+header{background:var(--sur);border-bottom:1px solid var(--brd);padding:0 18px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;gap:12px;flex-wrap:wrap}
+.logo{font-size:15px;font-weight:800;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.logo-dot{width:9px;height:9px;background:var(--grn);border-radius:50%}
+.period-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.period-bar label{font-size:11px;color:var(--t2);font-weight:600}
+.psel{padding:5px 9px;border:1px solid var(--brd2);border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;background:var(--sur);color:var(--txt);outline:none;cursor:pointer}
+.layout{display:flex;min-height:calc(100vh - 52px)}
+aside{width:188px;background:var(--sur);border-left:1px solid var(--brd);padding:10px 7px;flex-shrink:0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+.ns{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:8px 10px 4px;margin-top:6px}
+.ns:first-child{margin-top:0}
+.ni{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--t2);transition:.15s;margin-bottom:1px;border:none;background:transparent;width:100%;text-align:right;font-family:'Cairo',sans-serif}
+.ni:hover{background:var(--s2);color:var(--txt)}
+.ni.on{background:var(--bbg);color:var(--blu)}
+.ni-ico{font-size:14px;width:22px;text-align:center;flex-shrink:0}
+main{flex:1;padding:20px 22px;max-width:1000px;overflow-x:hidden}
+.pg{display:none}.pg.on{display:block}
+.pg-hd{margin-bottom:16px}
+.pg-title{font-size:17px;font-weight:800;margin-bottom:2px}
+.pg-sub{font-size:12px;color:var(--t2);line-height:1.6}
+.card{background:var(--sur);border:1px solid var(--brd);border-radius:var(--rl);padding:16px 18px;margin-bottom:14px}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.card-title{font-size:13px;font-weight:700}
+.mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:14px}
+.mc{background:var(--sur);border:1px solid var(--brd);border-radius:var(--rl);padding:12px 14px}
+.mc-lbl{font-size:11px;color:var(--t2);margin-bottom:3px;font-weight:500}
+.mc-val{font-size:17px;font-weight:700}
+.g{color:var(--grn)}.r{color:var(--red)}.a{color:var(--amb)}.b{color:var(--blu)}.p{color:var(--pur)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg label{font-size:11px;color:var(--t2);font-weight:500}
+.fg input,.fg select,.fg textarea{padding:7px 9px;border:1px solid var(--brd2);border-radius:8px;font-size:13px;font-family:'Cairo',sans-serif;background:var(--sur);color:var(--txt);outline:none;transition:.15s;width:100%}
+.fg input:focus,.fg select:focus{border-color:var(--blu);box-shadow:0 0 0 3px rgba(26,95,160,.07)}
+.slbl{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px;padding-bottom:4px;border-bottom:1px solid var(--brd)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;font-weight:700;transition:.15s;white-space:nowrap}
+.btn-p{background:var(--blu);color:#fff}.btn-p:hover{opacity:.87}
+.btn-g{background:var(--gbg);color:var(--grn);border:1px solid var(--gbg2)}
+.btn-ghost{background:var(--s2);color:var(--t2);border:1px solid var(--brd)}
+.btn-d{background:var(--rbg);color:var(--red);border:1px solid rgba(192,57,43,.2)}
+.btn-a{background:var(--abg);color:var(--amb);border:1px solid rgba(160,92,0,.2)}
+.btn-sm{padding:4px 9px;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:right;color:var(--t2);font-weight:600;padding:6px 7px;border-bottom:1.5px solid var(--brd2);font-size:11px;white-space:nowrap}
+td{padding:7px 7px;border-bottom:1px solid var(--brd);color:var(--txt);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--s2)}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap}
+.tag-g{background:var(--gbg);color:var(--grn)}
+.tag-r{background:var(--rbg);color:var(--red)}
+.tag-b{background:var(--bbg);color:var(--blu)}
+.tag-a{background:var(--abg);color:var(--amb)}
+.tag-p{background:var(--pbg);color:var(--pur)}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.mo-box{background:var(--sur);border-radius:var(--rl);padding:20px 22px;width:560px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mo-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.mo-title{font-size:14px;font-weight:800}
+.mo-close{background:var(--s2);border:none;border-radius:6px;width:27px;height:27px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--t2)}
+.rline{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--brd);font-size:13px}
+.rline:last-child{border-bottom:none}
+.rline-d{font-size:10px;color:var(--t3)}
+.rv{font-weight:700}
+.profit-box{border-radius:var(--rl);padding:16px 18px;margin-top:10px;background:var(--gbg);border:1px solid var(--gbg2)}
+.profit-box.neg{background:var(--rbg);border-color:rgba(192,57,43,.2)}
+.profit-lbl{font-size:11px;color:var(--grn);margin-bottom:3px;font-weight:700}
+.profit-box.neg .profit-lbl{color:var(--red)}
+.profit-val{font-size:24px;font-weight:800;color:var(--grn)}
+.profit-box.neg .profit-val{color:var(--red)}
+.empty{text-align:center;padding:28px 20px;color:var(--t3)}
+.empty-ico{font-size:30px;margin-bottom:7px}
+.empty-txt{font-size:12px;font-weight:500}
+.pay-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.pay-ok{background:var(--gbg);color:var(--grn)}
+.pay-partial{background:var(--abg);color:var(--amb)}
+.pay-no{background:var(--rbg);color:var(--red)}
+.year-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px}
+.yc{background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;transition:.15s}
+.yc:hover{background:var(--s3)}
+.yc.on{background:var(--bbg);border-color:var(--blu)}
+.yc-lbl{font-size:10px;color:var(--t2);margin-bottom:2px}
+.yc-val{font-size:12px;font-weight:700}
+.tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--s2);padding:3px;border-radius:9px;border:1px solid var(--brd)}
+.tab-btn{flex:1;padding:6px 8px;border:none;border-radius:7px;background:transparent;cursor:pointer;font-size:11px;font-family:'Cairo',sans-serif;font-weight:700;color:var(--t2);transition:.15s}
+.tab-btn.on{background:var(--sur);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.inp-tbl{width:65px;padding:4px 5px;border:1px solid var(--brd2);border-radius:6px;font-family:'Cairo',sans-serif;font-size:12px;background:var(--sur)}
+.divider{height:1px;background:var(--brd2);margin:12px 0}
+footer{margin-top:26px;padding:12px 0;border-top:1px solid var(--brd);font-size:11px;color:var(--t3);text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="logo-dot"></div>قسم المدفوعات</div>
+  <div class="period-bar">
+    <label>السنة:</label><select class="psel" id="sel-year" onchange="onPC()"></select>
+    <label>الشهر:</label><select class="psel" id="sel-month" onchange="onPC()"></select>
+    <label>الفترة:</label>
+    <select class="psel" id="sel-half" onchange="onPC()">
+      <option value="1">1 — 15</option>
+      <option value="2">16 — 31</option>
+    </select>
+    <span id="sync-status" style="font-size:11px;color:var(--t2);padding:4px 10px;background:var(--s2);border-radius:6px;border:1px solid var(--brd)">جاري التحميل...</span>
+    <button class="btn btn-ghost btn-sm" onclick="exportData()" title="تصدير البيانات">📤 تصدير</button>
+    <button class="btn btn-ghost btn-sm" onclick="$('import-file').click()" title="استيراد البيانات">📥 استيراد</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+</header>
+
+<div class="layout">
+<aside>
+  <div class="ns">الرئيسية</div>
+  <button class="ni on" onclick="gp('bilan')"><span class="ni-ico">📊</span>الميزانية</button>
+  <button class="ni" onclick="gp('annuel')"><span class="ni-ico">📅</span>ملخص سنوي</button>
+  <div class="ns">الفريق</div>
+  <button class="ni" onclick="gp('team')"><span class="ni-ico">🏗️</span>الهيكل</button>
+  <button class="ni" onclick="gp('boutiques')"><span class="ni-ico">🏪</span>البوتيكات</button>
+  <div class="ns">البيانات</div>
+  <button class="ni" onclick="gp('data')"><span class="ni-ico">📋</span>بيانات الفترة</button>
+  <button class="ni" onclick="gp('paycf')"><span class="ni-ico">📞</span>دفع الكونفيرماتور</button>
+  <button class="ni" onclick="gp('paymerch')"><span class="ni-ico">🏪</span>دفع التجار</button>
+  <button class="ni" onclick="gp('payteam')"><span class="ni-ico">👥</span>دفع الفريق</button>
+  <button class="ni" onclick="gp('expenses')"><span class="ni-ico">💸</span>المصاريف</button>
+  <div class="ns">الإعدادات</div>
+  <button class="ni" onclick="gp('tarifs')"><span class="ni-ico">💰</span>التعريفات</button>
+  <button class="ni" onclick="gp('salaires')"><span class="ni-ico">👔</span>الرواتب</button>
+  <button class="ni" onclick="gp('roles')"><span class="ni-ico">➕</span>المناصب</button>
+</aside>
+
+<main>
+
+<!-- ===== BILAN ===== -->
+<div id="pg-bilan" class="pg on">
+  <div class="pg-hd"><div class="pg-title">الميزانية</div><div class="pg-sub" id="bilan-sub">—</div></div>
+  <div class="mg" id="bilan-mg"></div>
+  <div id="bilan-detail"></div>
+</div>
+
+<!-- ===== ANNUEL ===== -->
+<div id="pg-annuel" class="pg">
+  <div class="pg-hd"><div class="pg-title">ملخص سنوي</div><div class="pg-sub">اضغط على أي فترة للانتقال إليها</div></div>
+  <div class="tabs">
+    <button class="tab-btn on" onclick="setAT('rev',this)">المداخيل</button>
+    <button class="tab-btn" onclick="setAT('net',this)">صافي الربح</button>
+    <button class="tab-btn" onclick="setAT('chg',this)">المصاريف</button>
+  </div>
+  <div id="annual-grid"></div>
+  <div id="annual-totals"></div>
+</div>
+
+<!-- ===== TEAM ===== -->
+<div id="pg-team" class="pg">
+  <div class="pg-hd"><div class="pg-title">الهيكل التنظيمي</div></div>
+  <div class="card"><div class="card-hd"><div class="card-title">👔 Teams Managers</div><button class="btn btn-p btn-sm" onclick="openMo('mo-tm')">+ إضافة</button></div><div id="tm-list"></div></div>
+  <div class="card"><div class="card-hd"><div class="card-title">🎯 السوبرفايزرز</div><button class="btn btn-p btn-sm" onclick="openMo('mo-sv')">+ إضافة</button></div><div id="sv-list"></div></div>
+  <div class="card"><div class="card-hd"><div class="card-title">📞 الكونفيرماتور</div><button class="btn btn-p btn-sm" onclick="openMo('mo-cf')">+ إضافة</button></div><div id="cf-list"></div></div>
+</div>
+
+<!-- ===== BOUTIQUES ===== -->
+<div id="pg-boutiques" class="pg">
+  <div class="pg-hd"><div class="pg-title">البوتيكات والتجار</div></div>
+  <button class="btn btn-p" style="margin-bottom:14px" onclick="openMo('mo-bq')">+ إضافة بوتيك</button>
+  <div id="bq-list"></div>
+</div>
+
+<!-- ===== DATA ===== -->
+<div id="pg-data" class="pg">
+  <div class="pg-hd"><div class="pg-title">بيانات الفترة</div><div class="pg-sub" id="data-sub">—</div></div>
+  <div class="card"><div class="card-title" style="margin-bottom:12px">📦 طلبيات حسب الكونفيرماتور والبوتيك</div><div id="cf-data-tbl"></div></div>
+  <div class="card"><div class="card-title" style="margin-bottom:12px">🎯 إجماليات السوبرفايزر (للبرايم)</div><div id="sv-data-tbl"></div></div>
+  <div class="card"><div class="card-title" style="margin-bottom:12px">🏢 مناصب ثابتة — عدد الأشخاص</div><div id="fixed-roles-data"></div></div>
+</div>
+
+<!-- ===== PAY CF ===== -->
+<div id="pg-paycf" class="pg">
+  <div class="pg-hd"><div class="pg-title">دفع الكونفيرماتور</div><div class="pg-sub">العمولة تتحسب كل 15 يوم — تُدفع كل شهر</div></div>
+  <div class="tabs">
+    <button class="tab-btn on" onclick="setCFT('period',this)">هذه الفترة</button>
+    <button class="tab-btn" onclick="setCFT('month',this)">هذا الشهر</button>
+    <button class="tab-btn" onclick="setCFT('all',this)">كل الفترات</button>
+  </div>
+  <div id="cf-pay-out"></div>
+</div>
+
+<!-- ===== PAY MERCH ===== -->
+<div id="pg-paymerch" class="pg">
+  <div class="pg-hd"><div class="pg-title">دفع التجار</div><div class="pg-sub">ما يستحق كل تاجر دفعه — كل 15 يوم</div></div>
+  <div class="tabs">
+    <button class="tab-btn on" onclick="setMT('period',this)">هذه الفترة</button>
+    <button class="tab-btn" onclick="setMT('all',this)">كل الفترات</button>
+  </div>
+  <div id="merch-pay-out"></div>
+</div>
+
+<!-- ===== PAY TEAM ===== -->
+<div id="pg-payteam" class="pg">
+  <div class="pg-hd"><div class="pg-title">دفع الفريق</div><div class="pg-sub">يُحسب كل 15 يوم — يُدفع كل شهر</div></div>
+  <div class="tabs">
+    <button class="tab-btn on" onclick="setTT('month',this)">هذا الشهر</button>
+    <button class="tab-btn" onclick="setTT('all',this)">كل الأشهر</button>
+  </div>
+  <div id="team-pay-out"></div>
+</div>
+
+<!-- ===== EXPENSES ===== -->
+<div id="pg-expenses" class="pg">
+  <div class="pg-hd"><div class="pg-title">المصاريف الحرة</div></div>
+  <button class="btn btn-p" style="margin-bottom:14px" onclick="openMo('mo-exp')">+ تسجيل مصرف</button>
+  <div class="mg" style="grid-template-columns:repeat(3,1fr)">
+    <div class="mc"><div class="mc-lbl">إجمالي الكل</div><div class="mc-val r" id="exp-tot">0 دج</div></div>
+    <div class="mc"><div class="mc-lbl">هذه الفترة</div><div class="mc-val a" id="exp-per">0 دج</div></div>
+    <div class="mc"><div class="mc-lbl">عدد السجلات</div><div class="mc-val b" id="exp-cnt">0</div></div>
+  </div>
+  <div class="card"><div id="exp-list"></div></div>
+</div>
+
+<!-- ===== TARIFS ===== -->
+<div id="pg-tarifs" class="pg">
+  <div class="pg-hd"><div class="pg-title">التعريفات</div><div class="pg-sub">السعر الافتراضي يُطبق على كل البوتيكات — يمكن تخصيص سعر مختلف لكل بوتيك من صفحة البوتيكات</div></div>
+  <div class="card">
+    <div class="card-hd"><div class="card-title">💵 أنواع الطلبيات وأسعارها (دج)</div><button class="btn btn-p btn-sm" onclick="addOrderType()">+ نوع جديد</button></div>
+    <div id="order-types-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">🎯 عمولة الكونفيرماتور على كل نوع (دج)</div>
+    <div id="cf-comm-list"></div>
+  </div>
+</div>
+
+<!-- ===== SALAIRES ===== -->
+<div id="pg-salaires" class="pg">
+  <div class="pg-hd"><div class="pg-title">رواتب الهيكل الثابت</div></div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">السوبرفايزرز (دج)</div>
+    <div class="g3">
+      <div class="fg"><label>TLT</label><input type="number" id="sv-tlt-fix" value="40000" min="0" oninput="SC()"></div>
+      <div class="fg"><label>2j مكتب</label><input type="number" id="sv-2j-fix" value="50000" min="0" oninput="SC()"></div>
+      <div class="fg"><label>4j مكتب</label><input type="number" id="sv-4j-fix" value="60000" min="0" oninput="SC()"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>هدف ليفري للبرايم</label><input type="number" id="sv-obj-l" value="1000" min="1" oninput="SC()"></div>
+      <div class="fg"><label>برايم ليفري (دج)</label><input type="number" id="sv-prime-l" value="4000" min="0" oninput="SC()"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>هدف QB/US/CS للبرايم</label><input type="number" id="sv-obj-q" value="1000" min="1" oninput="SC()"></div>
+      <div class="fg"><label>برايم QB (دج)</label><input type="number" id="sv-prime-q" value="10000" min="0" oninput="SC()"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">Teams Manager (دج)</div>
+    <div class="fg" style="margin-bottom:10px"><label>راتب ثابت</label><input type="number" id="tm-fix" value="100000" min="0" oninput="SC()"></div>
+    <div class="g2">
+      <div class="fg"><label>كل X ليفري → برايم (دج)</label><input type="number" id="tm-obj-l" value="10000" min="1" oninput="SC()"></div>
+      <div class="fg"><label>قيمة البرايم</label><input type="number" id="tm-prime-l" value="5000" min="0" oninput="SC()"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>كل X QB → برايم (دج)</label><input type="number" id="tm-obj-q" value="2500" min="1" oninput="SC()"></div>
+      <div class="fg"><label>قيمة البرايم</label><input type="number" id="tm-prime-q" value="10000" min="0" oninput="SC()"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ROLES ===== -->
+<div id="pg-roles" class="pg">
+  <div class="pg-hd"><div class="pg-title">المناصب الأخرى</div><div class="pg-sub">زيد أي منصب جديد في أي وقت — يُضاف تلقائياً في بيانات الفترة والميزانية</div></div>
+  <div class="card">
+    <div class="card-hd"><div class="card-title">المناصب الثابتة</div><button class="btn btn-p btn-sm" onclick="openMo('mo-role')">+ إضافة منصب</button></div>
+    <div id="roles-list"></div>
+  </div>
+</div>
+
+<footer>قسم المدفوعات — البيانات محفوظة تلقائياً</footer>
+</main>
+</div>
+
+<!-- ======== MODALS ======== -->
+<div class="mo" id="mo-tm"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">إضافة Teams Manager</div><button class="mo-close" onclick="closeMo('mo-tm')">✕</button></div>
+  <div class="fg" style="margin-bottom:14px"><label>الاسم</label><input type="text" id="tm-name" placeholder="أحمد بوزيد"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-tm')">إلغاء</button><button class="btn btn-p" onclick="addTM()">إضافة</button></div>
+</div></div>
+
+<div class="mo" id="mo-sv"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">إضافة سوبرفايزر</div><button class="mo-close" onclick="closeMo('mo-sv')">✕</button></div>
+  <div class="fg" style="margin-bottom:10px"><label>الاسم</label><input type="text" id="sv-name" placeholder="فاطمة سعيدي"></div>
+  <div class="g2" style="margin-bottom:14px">
+    <div class="fg"><label>نوع العمل</label><select id="sv-type"><option value="TLT">TLT</option><option value="2j">2j مكتب</option><option value="4j">4j مكتب</option></select></div>
+    <div class="fg"><label>Teams Manager</label><select id="sv-tm"><option value="">—</option></select></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-sv')">إلغاء</button><button class="btn btn-p" onclick="addSV()">إضافة</button></div>
+</div></div>
+
+<div class="mo" id="mo-cf"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">إضافة كونفيرماتور</div><button class="mo-close" onclick="closeMo('mo-cf')">✕</button></div>
+  <div class="fg" style="margin-bottom:10px"><label>الاسم</label><input type="text" id="cf-name" placeholder="سارة بن علي"></div>
+  <div class="fg" style="margin-bottom:14px"><label>السوبرفايزر</label><select id="cf-sv"><option value="">—</option></select></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-cf')">إلغاء</button><button class="btn btn-p" onclick="addCF()">إضافة</button></div>
+</div></div>
+
+<!-- Edit boutique modal (shared with add) -->
+<div class="mo" id="mo-bq"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title" id="mo-bq-title">إضافة بوتيك</div><button class="mo-close" onclick="closeMo('mo-bq')">✕</button></div>
+  <div class="g2" style="margin-bottom:10px">
+    <div class="fg"><label>اسم البوتيك</label><input type="text" id="bq-name" placeholder="متجر الأناقة"></div>
+    <div class="fg"><label>اسم التاجر</label><input type="text" id="bq-merchant" placeholder="محمد عيسى"></div>
+  </div>
+  <div class="fg" style="margin-bottom:10px"><label>نوع المنتجات</label>
+    <select id="bq-type"><option value="gadget">Gadget</option><option value="cosmetic">Cosmetic</option><option value="mixed">Mixte</option></select>
+  </div>
+  <div class="fg" style="margin-bottom:10px"><label>السوبرفايزر</label><select id="bq-sv"><option value="">—</option></select></div>
+  <div class="fg" style="margin-bottom:14px"><label>الكونفيرماتور (Ctrl للمتعدد)</label><select id="bq-cf" multiple style="height:80px"></select></div>
+  <div id="bq-custom-prices-section">
+    <div class="slbl">تعريفات خاصة (اتركها فارغة لاستخدام السعر الافتراضي)</div>
+    <div id="bq-price-overrides"></div>
+  </div>
+  <input type="hidden" id="bq-edit-id">
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-ghost" onclick="closeMo('mo-bq')">إلغاء</button><button class="btn btn-p" onclick="saveBQ()">حفظ</button></div>
+</div></div>
+
+<div class="mo" id="mo-role"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">إضافة منصب</div><button class="mo-close" onclick="closeMo('mo-role')">✕</button></div>
+  <div class="fg" style="margin-bottom:10px"><label>اسم المنصب</label><input type="text" id="role-name" placeholder="Comptable، Designer..."></div>
+  <div class="fg" style="margin-bottom:14px"><label>الراتب الثابت (دج)</label><input type="number" id="role-sal" value="0" min="0"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-role')">إلغاء</button><button class="btn btn-p" onclick="addRole()">إضافة</button></div>
+</div></div>
+
+<div class="mo" id="mo-exp"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">تسجيل مصرف</div><button class="mo-close" onclick="closeMo('mo-exp')">✕</button></div>
+  <div class="fg" style="margin-bottom:10px"><label>الوصف</label><input type="text" id="exp-desc" placeholder="شراء باب، إيجار..."></div>
+  <div class="g2" style="margin-bottom:10px">
+    <div class="fg"><label>المبلغ (دج)</label><input type="number" id="exp-amt" min="0" placeholder="0"></div>
+    <div class="fg"><label>التصنيف</label><select id="exp-cat">
+      <option value="عتاد">🖥️ عتاد</option><option value="إيجار">🏢 إيجار</option>
+      <option value="فواتير">⚡ فواتير</option><option value="نقل">🚗 نقل</option>
+      <option value="مستلزمات">📦 مستلزمات</option><option value="تسويق">📢 تسويق</option>
+      <option value="صيانة">🔧 صيانة</option><option value="متنوع">🗂️ متنوع</option>
+    </select></div>
+  </div>
+  <div class="g2" style="margin-bottom:16px">
+    <div class="fg"><label>التاريخ</label><input type="date" id="exp-date"></div>
+    <div class="fg"><label>الفترة المالية</label><select id="exp-per-sel"></select></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-exp')">إلغاء</button><button class="btn btn-p" onclick="addExp()">تسجيل</button></div>
+</div></div>
+
+<div class="mo" id="mo-pay"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title" id="mo-pay-title">تسجيل دفعة</div><button class="mo-close" onclick="closeMo('mo-pay')">✕</button></div>
+  <div id="mo-pay-info" style="margin-bottom:12px;font-size:12px;background:var(--s2);padding:10px 12px;border-radius:8px;line-height:1.7"></div>
+  <div class="g2" style="margin-bottom:10px">
+    <div class="fg"><label>المبلغ المدفوع (دج)</label><input type="number" id="pay-amt" min="0"></div>
+    <div class="fg"><label>تاريخ الدفع</label><input type="date" id="pay-date"></div>
+  </div>
+  <div class="fg" style="margin-bottom:16px"><label>ملاحظة</label><input type="text" id="pay-note" placeholder="كاش، تحويل..."></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-pay')">إلغاء</button><button class="btn btn-g" onclick="submitPay()">✓ تسجيل</button></div>
+  <input type="hidden" id="pay-type"><input type="hidden" id="pay-id"><input type="hidden" id="pay-period">
+</div></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const MONTHS=['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+let DB={
+  tms:[], svs:[], cfs:[], boutiques:[],
+  cfData:{},      // cfData[cfId][pk] = {byType:{typeId:count}, flexiDeduct:0}
+  svData:{},      // svData[svId][pk] = {livree:0,qb:0}
+  fixedData:{},   // fixedData[pk][roleId] = count
+  orderTypes:[],  // [{id,label,merchantPrice,cfComm,color}]
+  roles:[],       // [{id,name,salary}] extra roles beyond SV/TM
+  expenses:[],
+  payments:[],
+  settings:{}
+};
+let cY,cM,cH;
+let cfTab='period', mTab='period', tTab='month', aTab='rev';
+
+// ============================================================
+// BOOTSTRAP
+// ============================================================
+function boot(){
+  // Default order types
+  DB.orderTypes=[
+    {id:'gadget',   label:'Gadget ليفري',           merchantPrice:140, cfComm:60,  color:'tag-b'},
+    {id:'cosmetic', label:'Cosmetic ليفري',          merchantPrice:160, cfComm:60,  color:'tag-p'},
+    {id:'qb',       label:'QB / Upsell / Crossell',  merchantPrice:250, cfComm:100, color:'tag-g'},
+    {id:'pa',       label:'Panier Abandonné',         merchantPrice:200, cfComm:90,  color:'tag-a'},
+    {id:'cne',      label:'Confirmer non envoyé',     merchantPrice:100, cfComm:45,  color:'tag-r'},
+  ];
+  DB.settings={svTLTfix:40000,sv2jfix:50000,sv4jfix:60000,svObjL:1000,svPrimeL:4000,svObjQ:1000,svPrimeQ:10000,tmFix:100000,tmObjL:10000,tmPrimeL:5000,tmObjQ:2500,tmPrimeQ:10000};
+  load();
+  initSelectors();
+  loadSettings();
+  renderAll();
+}
+
+// ============================================================
+// PERIOD HELPERS
+// ============================================================
+function initSelectors(){
+  const now=new Date(); cY=now.getFullYear(); cM=now.getMonth()+1; cH=now.getDate()<=15?1:2;
+  const yr=$('sel-year');
+  for(let y=cY-1;y<=cY+1;y++) yr.innerHTML+=`<option value="${y}" ${y===cY?'selected':''}>${y}</option>`;
+  const mn=$('sel-month');
+  MONTHS.forEach((m,i)=>mn.innerHTML+=`<option value="${i+1}" ${i+1===cM?'selected':''}>${m}</option>`);
+  $('sel-half').value=cH;
+}
+function onPC(){ cY=+$('sel-year').value; cM=+$('sel-month').value; cH=+$('sel-half').value; renderAll(); }
+const pk=(y,m,h)=>`${y||cY}-${m||cM}-${h||cH}`;
+const mk=(y,m)=>`${y||cY}-${m||cM}`;
+const pLbl=(k)=>{ const[y,m,h]=k.split('-').map(Number); return `${MONTHS[m-1]} ${h===1?'1-15':'16-31'} ${y}`; };
+const mLbl=(k)=>{ const[y,m]=k.split('-').map(Number); return `${MONTHS[m-1]} ${y}`; };
+
+// ============================================================
+// STORAGE
+// ============================================================
+const $=id=>document.getElementById(id);
+const vn=id=>Math.max(0,+$(id)?.value||0);
+const fmt=n=>Math.round(n).toLocaleString('fr-DZ');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+let _saveTimer=null;
+function save(){
+  // localStorage as local cache
+  try{localStorage.setItem('paiement_v4',JSON.stringify(DB));}catch(e){}
+  // debounce Firebase saves (500ms)
+  if(_saveTimer)clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{ if(window._fbSave) window._fbSave(DB); },500);
+}
+
+function load(){
+  // load from localStorage first (instant)
+  try{const d=localStorage.getItem('paiement_v4');if(d){const p=JSON.parse(d);Object.keys(p).forEach(k=>{if(k!=='orderTypes'||p.orderTypes?.length)DB[k]=p[k];});}}catch(e){}
+}
+
+let _listenUnsubscribe=null;
+function startLiveSync(){
+  if(_listenUnsubscribe) return;
+  if(!window._fbListen) return;
+  _listenUnsubscribe=window._fbListen(function(remoteDB){
+    // merge remote into DB — remote wins for data fields
+    const localPeriod=cY+'-'+cM+'-'+cH;
+    Object.keys(remoteDB).forEach(k=>{
+      if(k!=='orderTypes'||remoteDB.orderTypes?.length) DB[k]=remoteDB[k];
+    });
+    try{localStorage.setItem('paiement_v4',JSON.stringify(DB));}catch(e){}
+    loadSettings();
+    renderAll();
+    showToast('🔄 بيانات محدثة من السيرفر');
+  });
+}
+
+// ============================================================
+// NAV & TABS
+// ============================================================
+function gp(id){ document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on')); document.querySelectorAll('.ni').forEach(b=>b.classList.remove('on')); $('pg-'+id).classList.add('on'); event.currentTarget.classList.add('on'); renderAll(); }
+function openMo(id){
+  if(id==='mo-sv'){const s=$('sv-tm');s.innerHTML='<option value="">—</option>';DB.tms.forEach(t=>s.innerHTML+=`<option value="${t.id}">${t.name}</option>`);}
+  if(id==='mo-cf'){const s=$('cf-sv');s.innerHTML='<option value="">—</option>';DB.svs.forEach(s2=>s.innerHTML+=`<option value="${s2.id}">${s2.name}</option>`);}
+  if(id==='mo-bq'){
+    $('mo-bq-title').textContent='إضافة بوتيك'; $('bq-edit-id').value='';
+    $('bq-name').value=''; $('bq-merchant').value='';
+    const sv=$('bq-sv');sv.innerHTML='<option value="">—</option>';DB.svs.forEach(s=>sv.innerHTML+=`<option value="${s.id}">${s.name}</option>`);
+    const cf=$('bq-cf');cf.innerHTML='';DB.cfs.forEach(c=>cf.innerHTML+=`<option value="${c.id}">${c.name}</option>`);
+    renderBQPriceOverrides('');
+  }
+  if(id==='mo-exp'){$('exp-date').value=new Date().toISOString().split('T')[0];fillExpPerSel();}
+  $(id).classList.add('open');
+}
+function closeMo(id){$(id).classList.remove('open');}
+function setCFT(t,btn){cfTab=t;document.querySelectorAll('#pg-paycf .tab-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderCFPay();}
+function setMT(t,btn){mTab=t;document.querySelectorAll('#pg-paymerch .tab-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderMerchPay();}
+function setTT(t,btn){tTab=t;document.querySelectorAll('#pg-payteam .tab-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderTeamPay();}
+function setAT(t,btn){aTab=t;document.querySelectorAll('#pg-annuel .tab-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderAnnual();}
+
+// ============================================================
+// ORDER TYPES (TARIFS)
+// ============================================================
+function addOrderType(){
+  const id=uid();
+  DB.orderTypes.push({id,label:'نوع جديد',merchantPrice:0,cfComm:0,color:'tag-g'});
+  save(); renderTarifs();
+}
+function updateOT(id,field,val){
+  const ot=DB.orderTypes.find(o=>o.id===id);
+  if(ot){ ot[field]=field.includes('Price')||field.includes('Comm')?+val:val; save(); renderTarifs(); }
+}
+function delOT(id){ if(confirm('حذف هذا النوع؟')){DB.orderTypes=DB.orderTypes.filter(o=>o.id!==id);save();renderAll();} }
+
+function renderTarifs(){
+  const otList=$('order-types-list');
+  if(!otList) return;
+  const colors=['tag-b','tag-p','tag-g','tag-a','tag-r'];
+  let h=`<div style="overflow-x:auto"><table><thead><tr><th>اسم النوع</th><th>سعر عند التاجر (دج)</th><th>اللون</th><th></th></tr></thead><tbody>`;
+  DB.orderTypes.forEach(ot=>{
+    h+=`<tr>
+      <td><input type="text" value="${ot.label}" style="width:180px;padding:4px 7px;border:1px solid var(--brd2);border-radius:6px;font-family:Cairo,sans-serif;font-size:12px" onchange="updateOT('${ot.id}','label',this.value)"></td>
+      <td><input type="number" value="${ot.merchantPrice}" min="0" style="width:90px;padding:4px 7px;border:1px solid var(--brd2);border-radius:6px;font-family:Cairo,sans-serif;font-size:12px" onchange="updateOT('${ot.id}','merchantPrice',this.value)"></td>
+      <td><select onchange="updateOT('${ot.id}','color',this.value)" style="padding:4px 7px;border:1px solid var(--brd2);border-radius:6px;font-family:Cairo,sans-serif;font-size:12px">${colors.map(c=>`<option value="${c}" ${ot.color===c?'selected':''}>${c.replace('tag-','')}</option>`).join('')}</select></td>
+      <td><button class="btn btn-d btn-sm" onclick="delOT('${ot.id}')">حذف</button></td>
+    </tr>`;
+  });
+  h+='</tbody></table></div>';
+  otList.innerHTML=h;
+
+  const cfList=$('cf-comm-list');
+  if(!cfList) return;
+  let h2=`<div style="overflow-x:auto"><table><thead><tr><th>نوع الطلبية</th><th>عمولة الكونفيرماتور (دج)</th></tr></thead><tbody>`;
+  DB.orderTypes.forEach(ot=>{
+    h2+=`<tr><td><span class="tag ${ot.color}">${ot.label}</span></td>
+    <td><input type="number" value="${ot.cfComm}" min="0" style="width:90px;padding:4px 7px;border:1px solid var(--brd2);border-radius:6px;font-family:Cairo,sans-serif;font-size:12px" onchange="updateOT('${ot.id}','cfComm',this.value)"></td></tr>`;
+  });
+  h2+='</tbody></table></div>';
+  cfList.innerHTML=h2;
+}
+
+// ============================================================
+// ROLES (extra positions)
+// ============================================================
+function addRole(){
+  const n=$('role-name').value.trim(); if(!n)return alert('أدخل اسم المنصب');
+  DB.roles.push({id:uid(),name:n,salary:+$('role-sal').value||0});
+  $('role-name').value=''; save(); closeMo('mo-role'); renderRoles(); renderFixedRolesData();
+}
+function delRole(id){if(!confirm('حذف المنصب؟'))return;DB.roles=DB.roles.filter(r=>r.id!==id);save();renderRoles();renderFixedRolesData();}
+function updateRoleSalary(id,val){const r=DB.roles.find(r=>r.id===id);if(r){r.salary=+val;save();SC();}}
+
+function renderRoles(){
+  const el=$('roles-list'); if(!el)return;
+  const defaultRoles=[
+    {id:'coord',name:'Coordinateur Manager',salary:DB.settings.coordFix||65000},
+    {id:'resp',name:'Responsable Paiement',salary:DB.settings.respFix||65000},
+    {id:'smm',name:'Social Media Manager',salary:DB.settings.smmFix||80000},
+    {id:'hr',name:'HR',salary:DB.settings.hrFix||80000},
+    {id:'agent',name:'Agent Commercial TLT',salary:DB.settings.agentFix||40000},
+  ];
+  let h='<div class="slbl">مناصب أساسية</div>';
+  defaultRoles.forEach(r=>{
+    h+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)">
+      <div style="flex:1;font-size:13px;font-weight:600">${r.name}</div>
+      <div class="fg" style="width:130px;margin-bottom:0"><input type="number" value="${r.salary}" min="0" style="font-size:12px" onchange="updateDefaultRoleSal('${r.id}',this.value)"></div>
+    </div>`;
+  });
+  if(DB.roles.length){
+    h+='<div class="slbl">مناصب مضافة</div>';
+    DB.roles.forEach(r=>{
+      h+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)">
+        <div style="flex:1;font-size:13px;font-weight:600">${r.name}</div>
+        <div class="fg" style="width:130px;margin-bottom:0"><input type="number" value="${r.salary}" min="0" style="font-size:12px" onchange="updateRoleSalary('${r.id}',this.value)"></div>
+        <button class="btn btn-d btn-sm" onclick="delRole('${r.id}')">حذف</button>
+      </div>`;
+    });
+  }
+  el.innerHTML=h;
+}
+function updateDefaultRoleSal(id,val){
+  const map={coord:'coordFix',resp:'respFix',smm:'smmFix',hr:'hrFix',agent:'agentFix'};
+  if(map[id]){DB.settings[map[id]]=+val;save();SC();}
+}
+
+// ============================================================
+// TEAM CRUD
+// ============================================================
+function addTM(){const n=$('tm-name').value.trim();if(!n)return alert('أدخل الاسم');DB.tms.push({id:uid(),name:n});$('tm-name').value='';save();closeMo('mo-tm');renderTeam();}
+function addSV(){const n=$('sv-name').value.trim();if(!n)return alert('أدخل الاسم');DB.svs.push({id:uid(),name:n,type:$('sv-type').value,tmId:$('sv-tm').value});$('sv-name').value='';save();closeMo('mo-sv');renderTeam();}
+function addCF(){const n=$('cf-name').value.trim();if(!n)return alert('أدخل الاسم');DB.cfs.push({id:uid(),name:n,svId:$('cf-sv').value});$('cf-name').value='';save();closeMo('mo-cf');renderTeam();}
+function delTM(id){if(!confirm('حذف؟'))return;DB.tms=DB.tms.filter(x=>x.id!==id);save();renderTeam();}
+function delSV(id){if(!confirm('حذف؟'))return;DB.svs=DB.svs.filter(x=>x.id!==id);save();renderTeam();}
+function delCF(id){if(!confirm('حذف؟'))return;DB.cfs=DB.cfs.filter(x=>x.id!==id);save();renderTeam();}
+
+// ============================================================
+// BOUTIQUE CRUD (with edit)
+// ============================================================
+function renderBQPriceOverrides(bqId){
+  const bq=DB.boutiques.find(b=>b.id===bqId)||{priceOverrides:{}};
+  const ovr=bq.priceOverrides||{};
+  let h='';
+  DB.orderTypes.forEach(ot=>{
+    h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="min-width:160px;font-size:12px"><span class="tag ${ot.color}">${ot.label}</span></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label style="font-size:10px">سعر التاجر (افتراضي: ${ot.merchantPrice})</label>
+        <input type="number" id="bq-ot-${ot.id}" value="${ovr[ot.id]!==undefined?ovr[ot.id]:''}" placeholder="${ot.merchantPrice}" min="0" style="font-size:12px"></div>
+    </div>`;
+  });
+  $('bq-price-overrides').innerHTML=h;
+}
+
+function editBQ(id){
+  const bq=DB.boutiques.find(b=>b.id===id); if(!bq)return;
+  $('mo-bq-title').textContent='تعديل بوتيك'; $('bq-edit-id').value=id;
+  $('bq-name').value=bq.name; $('bq-merchant').value=bq.merchant; $('bq-type').value=bq.type;
+  const sv=$('bq-sv');sv.innerHTML='<option value="">—</option>';DB.svs.forEach(s=>sv.innerHTML+=`<option value="${s.id}" ${s.id===bq.svId?'selected':''}>${s.name}</option>`);
+  const cf=$('bq-cf');cf.innerHTML='';DB.cfs.forEach(c=>cf.innerHTML+=`<option value="${c.id}" ${bq.cfIds.includes(c.id)?'selected':''}>${c.name}</option>`);
+  renderBQPriceOverrides(id);
+  $('mo-bq').classList.add('open');
+}
+
+function saveBQ(){
+  const editId=$('bq-edit-id').value;
+  const n=$('bq-name').value.trim(), m=$('bq-merchant').value.trim();
+  if(!n||!m)return alert('أدخل الاسم والتاجر');
+  const cfIds=Array.from($('bq-cf').selectedOptions).map(o=>o.value);
+  const priceOverrides={};
+  DB.orderTypes.forEach(ot=>{const v=$('bq-ot-'+ot.id)?.value;if(v!=='')priceOverrides[ot.id]=+v;});
+  if(editId){
+    const bq=DB.boutiques.find(b=>b.id===editId);
+    if(bq){Object.assign(bq,{name:n,merchant:m,type:$('bq-type').value,svId:$('bq-sv').value,cfIds,priceOverrides});}
+  } else {
+    DB.boutiques.push({id:uid(),name:n,merchant:m,type:$('bq-type').value,svId:$('bq-sv').value,cfIds,priceOverrides});
+  }
+  save(); closeMo('mo-bq'); renderBoutiques(); calcAll();
+}
+function delBQ(id){if(!confirm('حذف البوتيك؟'))return;DB.boutiques=DB.boutiques.filter(x=>x.id!==id);delete DB.cfData;DB.cfData={};save();renderBoutiques();calcAll();}
+
+// ============================================================
+// SETTINGS SAVE/LOAD
+// ============================================================
+function SC(){
+  const s=DB.settings;
+  s.svTLTfix=vn('sv-tlt-fix')||40000;s.sv2jfix=vn('sv-2j-fix')||50000;s.sv4jfix=vn('sv-4j-fix')||60000;
+  s.svObjL=vn('sv-obj-l')||1000;s.svPrimeL=vn('sv-prime-l')||4000;
+  s.svObjQ=vn('sv-obj-q')||1000;s.svPrimeQ=vn('sv-prime-q')||10000;
+  s.tmFix=vn('tm-fix')||100000;s.tmObjL=vn('tm-obj-l')||10000;s.tmPrimeL=vn('tm-prime-l')||5000;
+  s.tmObjQ=vn('tm-obj-q')||2500;s.tmPrimeQ=vn('tm-prime-q')||10000;
+  save(); calcAll();
+}
+function loadSettings(){
+  const s=DB.settings,set=(id,v)=>{if($(id))$(id).value=v;};
+  set('sv-tlt-fix',s.svTLTfix??40000);set('sv-2j-fix',s.sv2jfix??50000);set('sv-4j-fix',s.sv4jfix??60000);
+  set('sv-obj-l',s.svObjL??1000);set('sv-prime-l',s.svPrimeL??4000);
+  set('sv-obj-q',s.svObjQ??1000);set('sv-prime-q',s.svPrimeQ??10000);
+  set('tm-fix',s.tmFix??100000);set('tm-obj-l',s.tmObjL??10000);set('tm-prime-l',s.tmPrimeL??5000);
+  set('tm-obj-q',s.tmObjQ??2500);set('tm-prime-q',s.tmPrimeQ??10000);
+}
+
+// ============================================================
+// DATA INPUT
+// ============================================================
+function setCFData(cfId,bqId,otId,val){
+  const p=pk();
+  if(!DB.cfData[cfId])DB.cfData[cfId]={};
+  if(!DB.cfData[cfId][p])DB.cfData[cfId][p]={byBQ:{},flexiDeduct:0};
+  if(!DB.cfData[cfId][p].byBQ[bqId])DB.cfData[cfId][p].byBQ[bqId]={};
+  DB.cfData[cfId][p].byBQ[bqId][otId]=Math.max(0,+val||0);
+  save(); calcAll();
+}
+function setCFFlexiDeduct(cfId,val){
+  const p=pk();
+  if(!DB.cfData[cfId])DB.cfData[cfId]={};
+  if(!DB.cfData[cfId][p])DB.cfData[cfId][p]={byBQ:{},flexiDeduct:0};
+  DB.cfData[cfId][p].flexiDeduct=Math.max(0,+val||0);
+  save(); calcAll();
+}
+function setSVData(sid,field,val){
+  const p=pk();
+  if(!DB.svData[sid])DB.svData[sid]={};
+  if(!DB.svData[sid][p])DB.svData[sid][p]={livree:0,qb:0};
+  DB.svData[sid][p][field]=Math.max(0,+val||0);
+  save(); calcAll(); renderSVDataTbl();
+}
+function setFixedRoleData(roleId,val){
+  const p=pk();
+  if(!DB.fixedData[p])DB.fixedData[p]={};
+  DB.fixedData[p][roleId]=Math.max(0,+val||0);
+  save(); calcAll();
+}
+
+// ============================================================
+// CORE CALC
+// ============================================================
+function getPrice(bq,otId){
+  const ot=DB.orderTypes.find(o=>o.id===otId);
+  if(!ot)return 0;
+  return bq.priceOverrides?.[otId]!==undefined ? bq.priceOverrides[otId] : ot.merchantPrice;
+}
+function getCFComm(otId){ const ot=DB.orderTypes.find(o=>o.id===otId); return ot?ot.cfComm:0; }
+
+function calcPeriod(pkey){
+  const s=DB.settings;
+  const svFix={TLT:s.svTLTfix??40000,'2j':s.sv2jfix??50000,'4j':s.sv4jfix??60000};
+  const svObjL=s.svObjL??1000, svObjQ=s.svObjQ??1000;
+  const svPL=s.svPrimeL??4000, svPQ=s.svPrimeQ??10000;
+  const tmFix=s.tmFix??100000, tmObjL=s.tmObjL??10000, tmPL=s.tmPrimeL??5000, tmObjQ=s.tmObjQ??2500, tmPQ=s.tmPrimeQ??10000;
+
+  // Revenue & CF earnings per CF per boutique
+  let totalRev=0, totalCFComm=0, totalCFFlexiDeduct=0;
+  const bqRevMap={}, cfEarnMap={}, cfFlexiMap={};
+
+  DB.boutiques.forEach(bq=>{
+    let bqRev=0;
+    DB.cfs.filter(cf=>bq.cfIds.includes(cf.id)).forEach(cf=>{
+      const d=DB.cfData[cf.id]?.[pkey]?.byBQ?.[bq.id]||{};
+      let cfBqEarn=0;
+      DB.orderTypes.forEach(ot=>{
+        const count=d[ot.id]||0;
+        bqRev+=count*getPrice(bq,ot.id);
+        cfBqEarn+=count*getCFComm(ot.id);
+      });
+      if(!cfEarnMap[cf.id])cfEarnMap[cf.id]={earn:0,counts:{}};
+      cfEarnMap[cf.id].earn+=cfBqEarn;
+      DB.orderTypes.forEach(ot=>{ cfEarnMap[cf.id].counts[ot.id]=(cfEarnMap[cf.id].counts[ot.id]||0)+(d[ot.id]||0); });
+      totalCFComm+=cfBqEarn;
+    });
+    bqRevMap[bq.id]=bqRev;
+    totalRev+=bqRev;
+  });
+
+  // Apply flexi deductions
+  DB.cfs.forEach(cf=>{
+    const flexi=DB.cfData[cf.id]?.[pkey]?.flexiDeduct||0;
+    if(!cfEarnMap[cf.id])cfEarnMap[cf.id]={earn:0,counts:{}};
+    cfEarnMap[cf.id].flexi=flexi;
+    cfEarnMap[cf.id].netEarn=cfEarnMap[cf.id].earn-flexi;
+    cfFlexiMap[cf.id]=flexi;
+    totalCFFlexiDeduct+=flexi;
+  });
+
+  // SV salary
+  let cSVfix=0,cSVprime=0;
+  DB.svs.forEach(sv=>{
+    cSVfix+=svFix[sv.type]||0;
+    const d=DB.svData[sv.id]?.[pkey]||{};
+    if((d.livree||0)>=svObjL)cSVprime+=svPL;
+    if((d.qb||0)>=svObjQ)cSVprime+=svPQ;
+  });
+
+  // TM salary
+  const tmNb=DB.tms.length;
+  const cTMfix=tmNb*tmFix;
+  // use total livree from all CFs
+  let totalLivree=0,totalQB=0;
+  DB.cfs.forEach(cf=>{
+    const c=cfEarnMap[cf.id]?.counts||{};
+    // livree = gadget + cosmetic
+    totalLivree+=(c['gadget']||0)+(c['cosmetic']||0);
+    totalQB+=(c['qb']||0);
+  });
+  const cTMprime=Math.floor(totalLivree/tmObjL)*tmPL+Math.floor(totalQB/tmObjQ)*tmPQ;
+  const cTM=cTMfix+cTMprime;
+
+  // Fixed roles
+  const fd=DB.fixedData[pkey]||{};
+  const defaultRoleIds=['coord','resp','smm','hr','agent'];
+  const defaultSals={coord:s.coordFix??65000,resp:s.respFix??65000,smm:s.smmFix??80000,hr:s.hrFix??80000,agent:s.agentFix??40000};
+  let cFixed=0;
+  defaultRoleIds.forEach(id=>{ cFixed+=(fd[id]??1)*(defaultSals[id]||0); });
+  DB.roles.forEach(r=>{ cFixed+=(fd[r.id]??1)*(r.salary||0); });
+  // agent bonus handled separately if needed (simplified: included in fix)
+
+  const freeExp=(DB.expenses||[]).filter(e=>e.period===pkey).reduce((s,e)=>s+e.amount,0);
+  const totalSal=totalCFComm-totalCFFlexiDeduct+(cSVfix+cSVprime)+cTM+cFixed;
+  const totalChg=totalSal+freeExp;
+  const net=totalRev-totalChg;
+
+  return{totalRev,totalChg,totalSal,freeExp,net,bqRevMap,cfEarnMap,cfFlexiMap,
+    totalCFComm,totalCFFlexiDeduct,cSVfix,cSVprime,cTMfix,cTMprime,cTM,cFixed,
+    totalLivree,totalQB};
+}
+
+// ============================================================
+// CALC ALL (update header metrics)
+// ============================================================
+function calcAll(){
+  const p=pk();
+  const r=calcPeriod(p);
+  const lbl=`فترة ${pLbl(p)}`;
+  if($('bilan-sub'))$('bilan-sub').textContent=lbl;
+  if($('data-sub'))$('data-sub').textContent=lbl;
+  const marg=r.totalRev>0?Math.round(r.net/r.totalRev*100):null;
+
+  // Bilan metrics
+  const mgEl=$('bilan-mg');
+  if(mgEl){
+    const metrics=[
+      {lbl:'المداخيل',val:fmt(r.totalRev)+' دج',cls:'g'},
+      {lbl:'مصاريف الرواتب',val:fmt(r.totalSal)+' دج',cls:'r'},
+      {lbl:'مصاريف حرة',val:fmt(r.freeExp)+' دج',cls:'a'},
+      {lbl:'صافي الربح',val:fmt(r.net)+' دج',cls:r.net>=0?'g':'r'},
+      {lbl:'هامش الربح',val:marg!==null?marg+'%':'—',cls:marg===null?'':marg>=30?'g':marg>=10?'a':'r'},
+    ];
+    mgEl.innerHTML=metrics.map(m=>`<div class="mc"><div class="mc-lbl">${m.lbl}</div><div class="mc-val ${m.cls}">${m.val}</div></div>`).join('');
+  }
+
+  // Bilan detail
+  const bEl=$('bilan-detail');
+  if(bEl){
+    const bqRows=DB.boutiques.map(b=>{
+      const rev=r.bqRevMap[b.id]||0;
+      const sv=DB.svs.find(s=>s.id===b.svId);
+      return `<div class="rline"><span>🏪 <strong>${b.name}</strong> <span class="rline-d">${b.merchant}${sv?' · '+sv.name:''}</span></span><span class="rv g">${fmt(rev)} دج</span></div>`;
+    }).join('');
+
+    // CF breakdown
+    const cfRows=DB.cfs.map(cf=>{
+      const e=r.cfEarnMap[cf.id]||{earn:0,counts:{},flexi:0,netEarn:0};
+      const otSummary=DB.orderTypes.filter(ot=>(e.counts[ot.id]||0)>0).map(ot=>`<span class="tag ${ot.color}" style="margin-left:3px">${ot.label}: ${e.counts[ot.id]}</span>`).join('');
+      return `<div class="rline"><span>📞 <strong>${cf.name}</strong><br><span style="font-size:10px;color:var(--t2)">${otSummary}</span>${e.flexi?`<span style="font-size:10px;color:var(--red)"> · خصم فليكسي: ${fmt(e.flexi)} دج</span>`:''}</span><span class="rv r">${fmt(e.netEarn||0)} دج</span></div>`;
+    }).join('');
+
+    // Fixed roles detail
+    const fd=DB.fixedData[p]||{};
+    const s=DB.settings;
+    const defRoles=[
+      {id:'coord',name:'Coordinateur Manager',sal:s.coordFix??65000},
+      {id:'resp',name:'Responsable Paiement',sal:s.respFix??65000},
+      {id:'smm',name:'Social Media Manager',sal:s.smmFix??80000},
+      {id:'hr',name:'HR',sal:s.hrFix??80000},
+      {id:'agent',name:'Agent Commercial TLT',sal:s.agentFix??40000},
+    ];
+    const roleRows=[...defRoles,...DB.roles.map(r=>({id:r.id,name:r.name,sal:r.salary}))].map(ro=>{
+      const nb=fd[ro.id]??1;
+      return `<div class="rline"><span>${ro.name} <span class="rline-d">${nb} × ${fmt(ro.sal)} دج</span></span><span class="rv r">${fmt(nb*ro.sal)} دج</span></div>`;
+    }).join('');
+
+    bEl.innerHTML=`
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">📥 المداخيل — ${lbl}</div>
+      ${bqRows||'<div class="empty"><div class="empty-ico">🏪</div><div class="empty-txt">لا توجد بوتيكات</div></div>'}
+      <div style="border-top:2px solid var(--brd2);margin-top:6px;padding-top:6px">
+        ${DB.orderTypes.map(ot=>{
+          const totCount=DB.cfs.reduce((s,cf)=>s+(r.cfEarnMap[cf.id]?.counts[ot.id]||0),0);
+          const totRev=DB.boutiques.reduce((s,bq)=>s+((DB.cfData||{})['__all__']||0),0);
+          const revByOT=DB.boutiques.reduce((sum,bq)=>{
+            const v=DB.cfs.filter(cf=>bq.cfIds.includes(cf.id)).reduce((s2,cf)=>s2+(DB.cfData[cf.id]?.[p]?.byBQ?.[bq.id]?.[ot.id]||0),0);
+            return sum+v*getPrice(bq,ot.id);
+          },0);
+          return totCount>0?`<div class="rline"><span>${ot.label} <span class="rline-d">${totCount} طلبية</span></span><span class="rv g">${fmt(revByOT)} دج</span></div>`:'';
+        }).join('')}
+        <div class="rline"><span style="font-weight:800">إجمالي المداخيل</span><span class="rv g" style="font-size:15px">${fmt(r.totalRev)} دج</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">📤 المصاريف — ${lbl}</div>
+      <div class="slbl">عمولة الكونفيرماتور</div>
+      ${cfRows||'<div style="font-size:12px;color:var(--t3);padding:6px">لا يوجد</div>'}
+      <div class="rline"><span>إجمالي العمولة</span><span class="rv r">${fmt(r.totalCFComm)} دج</span></div>
+      ${r.totalCFFlexiDeduct>0?`<div class="rline"><span>خصم الفليكسي الإجمالي</span><span class="rv a">- ${fmt(r.totalCFFlexiDeduct)} دج</span></div>`:''}
+      <div class="slbl">السوبرفايزرز</div>
+      <div class="rline"><span>رواتب ثابتة (${DB.svs.length} SV)</span><span class="rv r">${fmt(r.cSVfix)} دج</span></div>
+      <div class="rline"><span>برايم</span><span class="rv r">${fmt(r.cSVprime)} دج</span></div>
+      <div class="slbl">Teams Managers</div>
+      <div class="rline"><span>رواتب ثابتة (${DB.tms.length} TM)</span><span class="rv r">${fmt(r.cTMfix)} دج</span></div>
+      <div class="rline"><span>برايم TM</span><span class="rv r">${fmt(r.cTMprime)} دج</span></div>
+      <div class="slbl">مناصب أخرى</div>
+      ${roleRows}
+      <div class="rline"><span>مصاريف حرة</span><span class="rv a">${fmt(r.freeExp)} دج</span></div>
+      <div class="rline"><span style="font-weight:800">إجمالي المصاريف</span><span class="rv r" style="font-size:15px">${fmt(r.totalChg)} دج</span></div>
+    </div>
+    <div class="${r.net>=0?'profit-box':'profit-box neg'}">
+      <div class="profit-lbl">${r.net>=0?'صافي الربح':'الخسارة الصافية'}${marg!==null?' — هامش '+marg+'%':''}</div>
+      <div class="profit-val">${r.net>=0?'+':''}${fmt(r.net)} دج</div>
+    </div>`;
+  }
+}
+
+// ============================================================
+// RENDER TEAM
+// ============================================================
+function renderTeam(){
+  const tc={TLT:'tag-b','2j':'tag-g','4j':'tag-p'};
+  let h='';
+  DB.tms.forEach(t=>{h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:9px;margin-bottom:7px"><div style="width:30px;height:30px;background:var(--bbg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px">👔</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${t.name}</div><div style="font-size:11px;color:var(--t2)">Teams Manager</div></div><button class="btn btn-d btn-sm" onclick="delTM('${t.id}')">حذف</button></div>`;});
+  $('tm-list').innerHTML=h||'<div class="empty"><div class="empty-ico">👔</div><div class="empty-txt">لم يتم إضافة TM</div></div>';
+  h='';
+  DB.svs.forEach(s=>{const tm=DB.tms.find(t=>t.id===s.tmId);h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:9px;margin-bottom:7px"><div style="width:30px;height:30px;background:var(--gbg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px">🎯</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--t2)">${tm?'تحت '+tm.name:''} · ${s.type}</div></div><span class="tag ${tc[s.type]}">${s.type}</span><button class="btn btn-d btn-sm" onclick="delSV('${s.id}')">حذف</button></div>`;});
+  $('sv-list').innerHTML=h||'<div class="empty"><div class="empty-ico">🎯</div><div class="empty-txt">لم يتم إضافة SV</div></div>';
+  h='';
+  DB.cfs.forEach(c=>{const sv=DB.svs.find(s=>s.id===c.svId);h+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--s2);border-radius:9px;margin-bottom:6px"><div style="width:28px;height:28px;background:var(--abg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px">📞</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${c.name}</div><div style="font-size:11px;color:var(--t2)">${sv?'تحت '+sv.name:''}</div></div><button class="btn btn-d btn-sm" onclick="delCF('${c.id}')">حذف</button></div>`;});
+  $('cf-list').innerHTML=h||'<div class="empty"><div class="empty-ico">📞</div><div class="empty-txt">لم يتم إضافة كونفيرماتور</div></div>';
+}
+
+// ============================================================
+// RENDER BOUTIQUES
+// ============================================================
+function renderBoutiques(){
+  const tc={gadget:'tag-b',cosmetic:'tag-p',mixed:'tag-a'},tl={gadget:'Gadget',cosmetic:'Cosmetic',mixed:'Mixte'};
+  let h='';
+  DB.boutiques.forEach(b=>{
+    const sv=DB.svs.find(s=>s.id===b.svId);
+    const cfs=DB.cfs.filter(c=>b.cfIds.includes(c.id));
+    const hasOverrides=b.priceOverrides&&Object.keys(b.priceOverrides).length>0;
+    h+=`<div style="background:var(--sur);border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div style="width:32px;height:32px;background:var(--s3);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">🏪</div>
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:13px;font-weight:700">${b.name}</div>
+          <div style="font-size:11px;color:var(--t2);margin-top:2px">تاجر: <strong>${b.merchant}</strong></div>
+          <div style="font-size:11px;color:var(--t2)">SV: ${sv?sv.name:'—'} · CF: ${cfs.map(c=>c.name).join(', ')||'—'}</div>
+          ${hasOverrides?`<div style="font-size:10px;color:var(--blu);margin-top:3px">⚙ تعريفات مخصصة</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="tag ${tc[b.type]}">${tl[b.type]}</span>
+          <button class="btn btn-a btn-sm" onclick="editBQ('${b.id}')">تعديل</button>
+          <button class="btn btn-d btn-sm" onclick="delBQ('${b.id}')">حذف</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  $('bq-list').innerHTML=h||'<div class="empty"><div class="empty-ico">🏪</div><div class="empty-txt">لا توجد بوتيكات</div></div>';
+}
+
+// ============================================================
+// RENDER DATA (per CF per boutique)
+// ============================================================
+function renderCFDataTbl(){
+  const p=pk();
+  if(!DB.cfs.length){$('cf-data-tbl').innerHTML='<div class="empty"><div class="empty-ico">📞</div><div class="empty-txt">أضف كونفيرماتور أولاً</div></div>';return;}
+  let h='';
+  DB.cfs.forEach(cf=>{
+    const myBQs=DB.boutiques.filter(b=>b.cfIds.includes(cf.id));
+    const cfD=DB.cfData[cf.id]?.[p]||{byBQ:{},flexiDeduct:0};
+    h+=`<div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:7px;padding:6px 10px;background:var(--abg);border-radius:7px;display:flex;align-items:center;justify-content:space-between">
+        <span>📞 ${cf.name}</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500">
+          خصم فليكسي (دج):
+          <input type="number" min="0" value="${cfD.flexiDeduct||0}" style="width:80px;padding:3px 6px;border:1px solid var(--brd2);border-radius:6px;font-family:Cairo,sans-serif;font-size:12px" onchange="setCFFlexiDeduct('${cf.id}',this.value)">
+        </span>
+      </div>`;
+    if(!myBQs.length){h+=`<div style="font-size:11px;color:var(--t3);padding:6px 10px">لا يوجد بوتيكات مخصصة لهذا الكونفيرماتور</div>`;} 
+    else {
+      h+=`<div style="overflow-x:auto"><table><thead><tr><th>البوتيك</th>${DB.orderTypes.map(ot=>`<th><span class="tag ${ot.color}" style="font-size:9px">${ot.label}</span></th>`).join('')}<th>إجمالي عمولة</th></tr></thead><tbody>`;
+      myBQs.forEach(bq=>{
+        const bqD=cfD.byBQ[bq.id]||{};
+        let cfBqEarn=0;
+        const cells=DB.orderTypes.map(ot=>{
+          const cnt=bqD[ot.id]||0;
+          cfBqEarn+=cnt*getCFComm(ot.id);
+          return `<td><input type="number" min="0" value="${cnt}" class="inp-tbl" onchange="setCFData('${cf.id}','${bq.id}','${ot.id}',this.value)"></td>`;
+        }).join('');
+        h+=`<tr><td><strong>${bq.name}</strong><br><span style="font-size:10px;color:var(--t2)">${bq.merchant}</span></td>${cells}<td><strong class="g">${fmt(cfBqEarn)}</strong></td></tr>`;
+      });
+      h+='</tbody></table></div>';
+    }
+    h+='</div>';
+  });
+  $('cf-data-tbl').innerHTML=h;
+}
+
+function renderSVDataTbl(){
+  const p=pk();
+  const svObjL=DB.settings.svObjL??1000, svObjQ=DB.settings.svObjQ??1000;
+  const svPL=DB.settings.svPrimeL??4000, svPQ=DB.settings.svPrimeQ??10000;
+  if(!DB.svs.length){$('sv-data-tbl').innerHTML='<div class="empty"><div class="empty-ico">🎯</div><div class="empty-txt">أضف سوبرفايزرز أولاً</div></div>';return;}
+  let h=`<div style="overflow-x:auto"><table><thead><tr><th>السوبرفايزر</th><th>النوع</th><th>ليفري (هدف ${svObjL})</th><th>QB/US/CS (هدف ${svObjQ})</th><th>البرايم</th></tr></thead><tbody>`;
+  DB.svs.forEach(sv=>{
+    if(!DB.svData[sv.id])DB.svData[sv.id]={};
+    if(!DB.svData[sv.id][p])DB.svData[sv.id][p]={livree:0,qb:0};
+    const d=DB.svData[sv.id][p];
+    const prime=(d.livree>=svObjL?svPL:0)+(d.qb>=svObjQ?svPQ:0);
+    const tc={TLT:'tag-b','2j':'tag-g','4j':'tag-p'};
+    h+=`<tr>
+      <td><strong>${sv.name}</strong></td>
+      <td><span class="tag ${tc[sv.type]}">${sv.type}</span></td>
+      <td><input type="number" min="0" value="${d.livree||0}" class="inp-tbl" style="width:80px" onchange="setSVData('${sv.id}','livree',this.value)"> ${d.livree>=svObjL?'<span class="tag tag-g">✓</span>':''}</td>
+      <td><input type="number" min="0" value="${d.qb||0}" class="inp-tbl" style="width:80px" onchange="setSVData('${sv.id}','qb',this.value)"> ${d.qb>=svObjQ?'<span class="tag tag-g">✓</span>':''}</td>
+      <td><strong class="${prime>0?'g':'r'}">${fmt(prime)} دج</strong></td>
+    </tr>`;
+  });
+  h+='</tbody></table></div>';
+  $('sv-data-tbl').innerHTML=h;
+}
+
+function renderFixedRolesData(){
+  const p=pk(); const fd=DB.fixedData[p]||{};
+  const s=DB.settings;
+  const defRoles=[
+    {id:'coord',name:'Coordinateur Manager',sal:s.coordFix??65000},
+    {id:'resp',name:'Responsable Paiement',sal:s.respFix??65000},
+    {id:'smm',name:'Social Media Manager',sal:s.smmFix??80000},
+    {id:'hr',name:'HR',sal:s.hrFix??80000},
+    {id:'agent',name:'Agent Commercial TLT',sal:s.agentFix??40000},
+  ];
+  const allRoles=[...defRoles,...DB.roles.map(r=>({id:r.id,name:r.name,sal:r.salary}))];
+  let h=`<div style="overflow-x:auto"><table><thead><tr><th>المنصب</th><th>الراتب</th><th>العدد</th><th>إجمالي</th></tr></thead><tbody>`;
+  allRoles.forEach(r=>{
+    const nb=fd[r.id]??1;
+    h+=`<tr><td><strong>${r.name}</strong></td><td style="color:var(--t2)">${fmt(r.sal)} دج</td>
+    <td><input type="number" min="0" value="${nb}" class="inp-tbl" style="width:60px" onchange="setFixedRoleData('${r.id}',this.value)"></td>
+    <td><strong class="r">${fmt(nb*r.sal)} دج</strong></td></tr>`;
+  });
+  h+='</tbody></table></div>';
+  $('fixed-roles-data').innerHTML=h;
+}
+
+// ============================================================
+// PAYMENTS
+// ============================================================
+function getPaid(type,id,pkey){ return DB.payments.filter(p=>p.type===type&&p.entityId===id&&p.period===pkey).reduce((s,p)=>s+p.amount,0); }
+function getPaidMonth(type,id,mkey){ return DB.payments.filter(p=>p.type===type&&p.entityId===id&&p.period===mkey).reduce((s,p)=>s+p.amount,0); }
+
+function openPayModal(type,id,pkey,title,info,suggested){
+  $('mo-pay-title').textContent=title;
+  $('mo-pay-info').innerHTML=info;
+  $('pay-amt').value=suggested||'';
+  $('pay-date').value=new Date().toISOString().split('T')[0];
+  $('pay-note').value='';
+  $('pay-type').value=type;$('pay-id').value=id;$('pay-period').value=pkey;
+  $('mo-pay').classList.add('open');
+}
+function submitPay(){
+  const amt=+$('pay-amt').value; if(!amt)return alert('أدخل المبلغ');
+  DB.payments.push({id:uid(),type:$('pay-type').value,entityId:$('pay-id').value,period:$('pay-period').value,amount:amt,date:$('pay-date').value,note:$('pay-note').value});
+  save(); closeMo('mo-pay'); renderAll();
+}
+function togglePayStatus(type,id,pkey,fullAmount){
+  // If not paid → mark as fully paid. If paid → remove payment.
+  const paid=getPaid(type,id,pkey);
+  if(paid>=fullAmount&&fullAmount>0){
+    // remove payments for this
+    DB.payments=DB.payments.filter(p=>!(p.type===type&&p.entityId===id&&p.period===pkey));
+  } else {
+    const rest=fullAmount-paid;
+    DB.payments.push({id:uid(),type,entityId:id,period:pkey,amount:rest,date:new Date().toISOString().split('T')[0],note:'دفع كامل'});
+  }
+  save(); renderAll();
+}
+
+// ============================================================
+// RENDER CF PAY
+// ============================================================
+function renderCFPay(){
+  const p=pk();
+  let h='';
+  if(!DB.cfs.length){$('cf-pay-out').innerHTML='<div class="empty"><div class="empty-ico">📞</div><div class="empty-txt">لا يوجد كونفيرماتور</div></div>';return;}
+  const r=calcPeriod(p);
+
+  if(cfTab==='period'){
+    h=`<div class="card"><div class="card-title" style="margin-bottom:12px">الكونفيرماتور — ${pLbl(p)}</div>
+    <div style="overflow-x:auto"><table><thead><tr><th>الاسم</th>${DB.orderTypes.map(ot=>`<th><span class="tag ${ot.color}" style="font-size:9px">${ot.label.split(' ')[0]}</span></th>`).join('')}<th>عمولة</th><th>فليكسي</th><th>الصافي</th><th>مدفوع</th><th>باقي</th><th>الحالة</th></tr></thead><tbody>`;
+    DB.cfs.forEach(cf=>{
+      const e=r.cfEarnMap[cf.id]||{earn:0,counts:{},flexi:0,netEarn:0};
+      const net=e.earn-(e.flexi||0);
+      const paid=getPaid('cf',cf.id,p);
+      const rest=Math.max(0,net-paid);
+      const isFullyPaid=paid>=net&&net>0;
+      const statusClass=isFullyPaid?'pay-ok':paid>0?'pay-partial':'pay-no';
+      const statusLbl=isFullyPaid?'✓ مسلك':paid>0?'جزئي':'✗ مسلكتش';
+      h+=`<tr>
+        <td><strong>${cf.name}</strong></td>
+        ${DB.orderTypes.map(ot=>`<td>${e.counts[ot.id]||0}</td>`).join('')}
+        <td class="g">${fmt(e.earn)}</td>
+        <td class="r">${fmt(e.flexi||0)}</td>
+        <td class="g">${fmt(net)} دج</td>
+        <td class="b">${fmt(paid)}</td>
+        <td class="${rest>0?'r':'g'}">${fmt(rest)}</td>
+        <td>
+          <button class="btn ${isFullyPaid?'btn-g':'btn-d'} btn-sm" onclick="togglePayStatus('cf','${cf.id}','${p}',${net})">${statusLbl}</button>
+          ${rest>0&&!isFullyPaid?`<button class="btn btn-ghost btn-sm" onclick="openPayModal('cf','${cf.id}','${p}','دفع — ${cf.name}','عمولة: ${fmt(e.earn)} دج | فليكسي: ${fmt(e.flexi||0)} دج | الصافي: ${fmt(net)} دج | مدفوع: ${fmt(paid)} دج',${rest})">دفعة جزئية</button>`:''}
+        </td>
+      </tr>`;
+    });
+    h+='</tbody></table></div></div>';
+  } else if(cfTab==='month'){
+    const p1=pk(cY,cM,1),p2=pk(cY,cM,2);
+    const r1=calcPeriod(p1),r2=calcPeriod(p2);
+    h=`<div class="card"><div class="card-title" style="margin-bottom:12px">الكونفيرماتور — ${MONTHS[cM-1]} ${cY}</div>
+    <table><thead><tr><th>الاسم</th><th>1-15</th><th>16-31</th><th>إجمالي</th><th>مدفوع</th><th>باقي</th><th>الحالة</th></tr></thead><tbody>`;
+    DB.cfs.forEach(cf=>{
+      const e1=r1.cfEarnMap[cf.id]||{earn:0,flexi:0,netEarn:0};
+      const e2=r2.cfEarnMap[cf.id]||{earn:0,flexi:0,netEarn:0};
+      const n1=e1.earn-(e1.flexi||0),n2=e2.earn-(e2.flexi||0);
+      const total=n1+n2;
+      const paid=getPaid('cf',cf.id,p1)+getPaid('cf',cf.id,p2);
+      const rest=Math.max(0,total-paid);
+      const s=paid>=total&&total>0?'pay-ok':paid>0?'pay-partial':'pay-no';
+      h+=`<tr><td><strong>${cf.name}</strong></td><td class="g">${fmt(n1)}</td><td class="g">${fmt(n2)}</td>
+      <td class="g">${fmt(total)} دج</td><td class="b">${fmt(paid)}</td><td class="${rest>0?'r':'g'}">${fmt(rest)}</td>
+      <td><span class="pay-badge ${s}">${paid>=total&&total>0?'✓ مسلك':paid>0?'جزئي':'✗ مسلكتش'}</span></td></tr>`;
+    });
+    h+='</tbody></table></div>';
+  } else {
+    h=`<div class="card"><div class="card-title" style="margin-bottom:12px">كل الفترات — أرصدة الكونفيرماتور</div>`;
+    DB.cfs.forEach(cf=>{
+      let totEarn=0,totPaid=0;const rows=[];
+      for(let m=1;m<=12;m++)for(let hh=1;hh<=2;hh++){
+        const pk2=pk(cY,m,hh);const r2=calcPeriod(pk2);
+        const e=r2.cfEarnMap[cf.id]||{earn:0,flexi:0};
+        const net=e.earn-(e.flexi||0);
+        const paid=getPaid('cf',cf.id,pk2);
+        if(net>0||paid>0){totEarn+=net;totPaid+=paid;rows.push({pk2,net,paid});}
+      }
+      const rest=totEarn-totPaid;
+      h+=`<div style="border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700">📞 ${cf.name}</div>
+          <div style="font-size:12px;display:flex;gap:10px">
+            <span>مستحق: <strong class="g">${fmt(totEarn)} دج</strong></span>
+            <span>مدفوع: <strong class="b">${fmt(totPaid)} دج</strong></span>
+            <span>باقي: <strong class="${rest>0?'r':'g'}">${fmt(rest)} دج</strong></span>
+          </div>
+        </div>
+        ${rows.length?`<table style="font-size:11px"><thead><tr><th>الفترة</th><th>الصافي</th><th>مدفوع</th><th>باقي</th><th>الحالة</th></tr></thead><tbody>
+        ${rows.map(({pk2,net,paid})=>{const r2=Math.max(0,net-paid);const s=paid>=net&&net>0?'pay-ok':paid>0?'pay-partial':'pay-no';return`<tr><td>${pLbl(pk2)}</td><td class="g">${fmt(net)}</td><td class="b">${fmt(paid)}</td><td class="${r2>0?'r':'g'}">${fmt(r2)}</td><td><span class="pay-badge ${s}">${paid>=net&&net>0?'✓':paid>0?'جزئي':'—'}</span></td></tr>`;}).join('')}
+        </tbody></table>`:'<div style="font-size:11px;color:var(--t3)">لا توجد بيانات</div>'}
+      </div>`;
+    });
+    h+='</div>';
+  }
+  $('cf-pay-out').innerHTML=h;
+}
+
+// ============================================================
+// RENDER MERCHANT PAY
+// ============================================================
+function renderMerchPay(){
+  const p=pk();
+  const merchants=[...new Set(DB.boutiques.map(b=>b.merchant))];
+  if(!merchants.length){$('merch-pay-out').innerHTML='<div class="empty"><div class="empty-ico">🏪</div><div class="empty-txt">لا توجد بوتيكات</div></div>';return;}
+  let h='';
+  const r=calcPeriod(p);
+
+  if(mTab==='period'){
+    h=`<div class="card"><div class="card-title" style="margin-bottom:12px">التجار — ${pLbl(p)}</div>
+    <table><thead><tr><th>التاجر</th><th>البوتيكات</th><th>إجمالي مستحق</th><th>سبق دفع</th><th>المتبقي</th><th>الحالة</th><th></th></tr></thead><tbody>`;
+    merchants.forEach(merchant=>{
+      const bqs=DB.boutiques.filter(b=>b.merchant===merchant);
+      const total=bqs.reduce((s,b)=>s+(r.bqRevMap[b.id]||0),0);
+      const paid=bqs.reduce((s,b)=>s+getPaid('merchant',b.id,p),0);
+      const rest=Math.max(0,total-paid);
+      const isFullyPaid=paid>=total&&total>0;
+      const sc=isFullyPaid?'pay-ok':paid>0?'pay-partial':'pay-no';
+      const bqTags=bqs.map(b=>`<span class="tag tag-b" style="margin-left:2px;font-size:9px">${b.name}</span>`).join('');
+      h+=`<tr>
+        <td><strong>${merchant}</strong></td>
+        <td>${bqTags}</td>
+        <td class="g">${fmt(total)} دج</td>
+        <td class="b">${fmt(paid)} دج</td>
+        <td class="${rest>0?'r':'g'}"><strong>${fmt(rest)} دج</strong></td>
+        <td><span class="pay-badge ${sc}">${isFullyPaid?'✓ سلك':paid>0?'جزئي':'✗ مسلكتش'}</span></td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn ${isFullyPaid?'btn-g':'btn-d'} btn-sm" onclick="togglePayStatus('merchant','${bqs[0].id}','${p}',${total})">${isFullyPaid?'إلغاء السداد':'سلك كامل'}</button>
+          ${rest>0&&!isFullyPaid?`<button class="btn btn-ghost btn-sm" onclick="openPayModal('merchant','${bqs[0].id}','${p}','دفع تاجر — ${merchant}','الفترة: ${pLbl(p)}<br>المستحق: ${fmt(total)} دج | مدفوع: ${fmt(paid)} دج | باقي: ${fmt(rest)} دج',${rest})">جزئي</button>`:''}
+        </td>
+      </tr>`;
+    });
+    h+='</tbody></table></div>';
+  } else {
+    h=`<div class="card"><div class="card-title" style="margin-bottom:12px">كل الفترات — أرصدة التجار</div>`;
+    merchants.forEach(merchant=>{
+      const bqs=DB.boutiques.filter(b=>b.merchant===merchant);
+      let totEarn=0,totPaid=0;const rows=[];
+      for(let m=1;m<=12;m++)for(let hh=1;hh<=2;hh++){
+        const pk2=pk(cY,m,hh);const r2=calcPeriod(pk2);
+        const total=bqs.reduce((s,b)=>s+(r2.bqRevMap[b.id]||0),0);
+        const paid=bqs.reduce((s,b)=>s+getPaid('merchant',b.id,pk2),0);
+        if(total>0||paid>0){totEarn+=total;totPaid+=paid;rows.push({pk2,total,paid});}
+      }
+      const rest=totEarn-totPaid;
+      h+=`<div style="border:1px solid var(--brd);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700">🏪 ${merchant}</div>
+          <div style="font-size:12px;display:flex;gap:10px">
+            <span>الإجمالي: <strong class="g">${fmt(totEarn)} دج</strong></span>
+            <span>سبق دفع: <strong class="b">${fmt(totPaid)} دج</strong></span>
+            <span>المتبقي: <strong class="${rest>0?'r':'g'}">${fmt(rest)} دج</strong></span>
+          </div>
+        </div>
+        ${rows.length?`<table style="font-size:11px"><thead><tr><th>الفترة</th><th>مستحق</th><th>سبق دفع</th><th>المتبقي</th><th>الحالة</th><th></th></tr></thead><tbody>
+        ${rows.map(({pk2,total,paid})=>{const r2=Math.max(0,total-paid);const sc=paid>=total&&total>0?'pay-ok':paid>0?'pay-partial':'pay-no';return`<tr><td>${pLbl(pk2)}</td><td class="g">${fmt(total)}</td><td class="b">${fmt(paid)}</td><td class="${r2>0?'r':'g'}">${fmt(r2)}</td><td><span class="pay-badge ${sc}">${paid>=total&&total>0?'✓':paid>0?'جزئي':'—'}</span></td><td>${r2>0?`<button class="btn btn-g btn-sm" onclick="openPayModal('merchant','${bqs[0].id}','${pk2}','${merchant}','${pLbl(pk2)}: ${fmt(total)} دج',${r2})">دفع</button>`:'—'}</td></tr>`;}).join('')}
+        </tbody></table>`:'<div style="font-size:11px;color:var(--t3)">لا توجد بيانات</div>'}
+      </div>`;
+    });
+    h+='</div>';
+  }
+  $('merch-pay-out').innerHTML=h;
+}
+
+// ============================================================
+// RENDER TEAM PAY
+// ============================================================
+function renderTeamPay(){
+  let h='';
+  const s=DB.settings;
+  const svFix={TLT:s.svTLTfix??40000,'2j':s.sv2jfix??50000,'4j':s.sv4jfix??60000};
+  const svObjL=s.svObjL??1000,svObjQ=s.svObjQ??1000,svPL=s.svPrimeL??4000,svPQ=s.svPrimeQ??10000;
+
+  if(tTab==='month'){
+    const p1=pk(cY,cM,1),p2=pk(cY,cM,2),mk2=mk();
+    const r1=calcPeriod(p1),r2=calcPeriod(p2);
+    h+=`<div class="card"><div class="card-title" style="margin-bottom:12px">🎯 السوبرفايزرز — ${MONTHS[cM-1]} ${cY}</div>
+    <table><thead><tr><th>الاسم</th><th>الراتب</th><th>برايم 1-15</th><th>برايم 16-31</th><th>إجمالي الشهر</th><th>مدفوع</th><th>باقي</th><th>الحالة</th></tr></thead><tbody>`;
+    DB.svs.forEach(sv=>{
+      const fix=svFix[sv.type]||0;
+      const d1=DB.svData[sv.id]?.[p1]||{};const d2=DB.svData[sv.id]?.[p2]||{};
+      const p1p=(d1.livree>=svObjL?svPL:0)+(d1.qb>=svObjQ?svPQ:0);
+      const p2p=(d2.livree>=svObjL?svPL:0)+(d2.qb>=svObjQ?svPQ:0);
+      const total=fix+p1p+p2p;
+      const paid=getPaidMonth('sv_month',sv.id,mk2);
+      const rest=Math.max(0,total-paid);
+      const ip=paid>=total&&total>0;
+      h+=`<tr><td><strong>${sv.name}</strong></td><td>${fmt(fix)}</td><td class="a">${fmt(p1p)}</td><td class="a">${fmt(p2p)}</td>
+      <td class="g">${fmt(total)} دج</td><td class="b">${fmt(paid)}</td><td class="${rest>0?'r':'g'}">${fmt(rest)}</td>
+      <td><button class="btn ${ip?'btn-g':'btn-d'} btn-sm" onclick="togglePayStatus('sv_month','${sv.id}','${mk2}',${total})">${ip?'✓ مسلك':'✗ مسلكتش'}</button></td></tr>`;
+    });
+    h+='</tbody></table></div>';
+
+    h+=`<div class="card"><div class="card-title" style="margin-bottom:12px">👔 Teams Managers — ${MONTHS[cM-1]} ${cY}</div>
+    <table><thead><tr><th>الاسم</th><th>الراتب</th><th>برايم الشهر</th><th>إجمالي</th><th>مدفوع</th><th>باقي</th><th>الحالة</th></tr></thead><tbody>`;
+    const tmFix=s.tmFix??100000;
+    DB.tms.forEach(tm=>{
+      const primeTot=(r1.cTMprime||0)+(r2.cTMprime||0);
+      const share=DB.tms.length>0?primeTot/DB.tms.length:0;
+      const total=tmFix+share;
+      const paid=getPaidMonth('tm_month',tm.id,mk2);
+      const rest=Math.max(0,total-paid);
+      const ip=paid>=total&&total>0;
+      h+=`<tr><td><strong>${tm.name}</strong></td><td>${fmt(tmFix)}</td><td class="a">${fmt(share)}</td>
+      <td class="g">${fmt(total)} دج</td><td class="b">${fmt(paid)}</td><td class="${rest>0?'r':'g'}">${fmt(rest)}</td>
+      <td><button class="btn ${ip?'btn-g':'btn-d'} btn-sm" onclick="togglePayStatus('tm_month','${tm.id}','${mk2}',${total})">${ip?'✓ مسلك':'✗ مسلكتش'}</button></td></tr>`;
+    });
+    h+='</tbody></table></div>';
+  } else {
+    h=`<div class="card"><div class="card-title" style="margin-bottom:12px">كل الأشهر — ملخص دفع الفريق</div>`;
+    for(let m=1;m<=12;m++){
+      const p1=pk(cY,m,1),p2=pk(cY,m,2),mk2=mk(cY,m);
+      const r1=calcPeriod(p1),r2=calcPeriod(p2);
+      const totSV=DB.svs.reduce((s,sv)=>{const fix=svFix[sv.type]||0;const d1=DB.svData[sv.id]?.[p1]||{};const d2=DB.svData[sv.id]?.[p2]||{};return s+fix+(d1.livree>=svObjL?svPL:0)+(d1.qb>=svObjQ?svPQ:0)+(d2.livree>=svObjL?svPL:0)+(d2.qb>=svObjQ?svPQ:0);},0);
+      const totTM=DB.tms.length*(s.tmFix??100000)+(r1.cTMprime||0)+(r2.cTMprime||0);
+      const grand=totSV+totTM;
+      const paid=DB.payments.filter(p=>(['sv_month','tm_month'].includes(p.type))&&p.period===mk2).reduce((s,p)=>s+p.amount,0);
+      const rest=grand-paid;
+      if(grand>0) h+=`<div class="rline"><span style="font-weight:600">${MONTHS[m-1]} ${cY}</span>
+        <div style="display:flex;gap:12px;font-size:12px">
+          <span>الإجمالي: <strong class="g">${fmt(grand)} دج</strong></span>
+          <span>مدفوع: <strong class="b">${fmt(paid)} دج</strong></span>
+          <span>باقي: <strong class="${rest>0?'r':'g'}">${fmt(rest)} دج</strong></span>
+          <span class="pay-badge ${paid>=grand&&grand>0?'pay-ok':paid>0?'pay-partial':'pay-no'}">${paid>=grand&&grand>0?'✓ مسلك':'✗ باقي'}</span>
+        </div></div>`;
+    }
+    h+='</div>';
+  }
+  $('team-pay-out').innerHTML=h||'<div class="empty"><div class="empty-ico">👥</div><div class="empty-txt">لا يوجد فريق</div></div>';
+}
+
+// ============================================================
+// EXPENSES
+// ============================================================
+function fillExpPerSel(){
+  const s=$('exp-per-sel');if(!s)return;s.innerHTML='';
+  for(let m=1;m<=12;m++){s.innerHTML+=`<option value="${cY}-${m}-1">${MONTHS[m-1]} 1-15</option>`;s.innerHTML+=`<option value="${cY}-${m}-2">${MONTHS[m-1]} 16-31</option>`;}
+  s.value=pk();
+}
+function addExp(){
+  const desc=$('exp-desc').value.trim(),amt=+$('exp-amt').value;
+  if(!desc||!amt)return alert('أدخل الوصف والمبلغ');
+  DB.expenses.push({id:uid(),desc,amount:amt,cat:$('exp-cat').value,date:$('exp-date').value,period:$('exp-per-sel').value});
+  $('exp-desc').value='';$('exp-amt').value='';save();closeMo('mo-exp');renderExpenses();calcAll();
+}
+function delExp(id){DB.expenses=DB.expenses.filter(x=>x.id!==id);save();renderExpenses();calcAll();}
+function renderExpenses(){
+  const p=pk();
+  const catCol={عتاد:'tag-b',إيجار:'tag-p',فواتير:'tag-a',نقل:'tag-g',مستلزمات:'tag-b',تسويق:'tag-r',صيانة:'tag-a',متنوع:'tag-g'};
+  const all=DB.expenses||[];
+  $('exp-tot').textContent=fmt(all.reduce((s,e)=>s+e.amount,0))+' دج';
+  $('exp-per').textContent=fmt(all.filter(e=>e.period===p).reduce((s,e)=>s+e.amount,0))+' دج';
+  $('exp-cnt').textContent=all.length;
+  if(!all.length){$('exp-list').innerHTML='<div class="empty"><div class="empty-ico">💸</div><div class="empty-txt">لا توجد مصاريف</div></div>';return;}
+  let h=`<div style="overflow-x:auto"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>التصنيف</th><th>الفترة</th><th>المبلغ</th><th></th></tr></thead><tbody>`;
+  [...all].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(e=>{
+    h+=`<tr><td style="font-size:11px;color:var(--t2)">${e.date||'—'}</td><td><strong>${e.desc}</strong></td>
+    <td><span class="tag ${catCol[e.cat]||'tag-g'}">${e.cat}</span></td>
+    <td><span class="tag ${e.period===p?'tag-b':'tag-g'}">${pLbl(e.period)||e.period}</span></td>
+    <td><strong class="r">${fmt(e.amount)} دج</strong></td>
+    <td><button class="btn btn-d btn-sm" onclick="delExp('${e.id}')">حذف</button></td></tr>`;
+  });
+  $('exp-list').innerHTML=h+'</tbody></table></div>';
+}
+
+// ============================================================
+// ANNUAL
+// ============================================================
+function renderAnnual(){
+  let tR=0,tN=0,tC=0;
+  let g='<div class="year-grid">';
+  for(let m=1;m<=12;m++)for(let hh=1;hh<=2;hh++){
+    const pk2=pk(cY,m,hh);const r=calcPeriod(pk2);
+    const isC=pk2===pk();
+    if(aTab==='rev'){tR+=r.totalRev;const c=r.totalRev>0?'g':'';g+=`<div class="yc ${isC?'on':''}" onclick="jumpPeriod(${cY},${m},${hh})"><div class="yc-lbl">${MONTHS[m-1].slice(0,3)} ${hh===1?'①':'②'}</div><div class="yc-val ${c}">${r.totalRev>0?fmt(r.totalRev/1000)+'k':'—'}</div></div>`;}
+    else if(aTab==='net'){tN+=r.net;const c=r.totalRev>0?(r.net>0?'g':'r'):'';g+=`<div class="yc ${isC?'on':''}" onclick="jumpPeriod(${cY},${m},${hh})"><div class="yc-lbl">${MONTHS[m-1].slice(0,3)} ${hh===1?'①':'②'}</div><div class="yc-val ${c}">${r.totalRev>0?(r.net>0?'+':'')+fmt(r.net/1000)+'k':'—'}</div></div>`;}
+    else{tC+=r.totalChg;const c=r.totalChg>0?'r':'';g+=`<div class="yc ${isC?'on':''}" onclick="jumpPeriod(${cY},${m},${hh})"><div class="yc-lbl">${MONTHS[m-1].slice(0,3)} ${hh===1?'①':'②'}</div><div class="yc-val ${c}">${r.totalChg>0?fmt(r.totalChg/1000)+'k':'—'}</div></div>`;}
+  }
+  g+='</div>';
+  $('annual-grid').innerHTML=g;
+  const marg=tR>0?Math.round(tN/tR*100):null;
+  $('annual-totals').innerHTML=`<div class="card">
+    <div class="card-title" style="margin-bottom:12px">إجماليات ${cY}</div>
+    <div class="mg" style="grid-template-columns:repeat(4,1fr)">
+      <div class="mc"><div class="mc-lbl">إجمالي المداخيل</div><div class="mc-val g">${fmt(tR)} دج</div></div>
+      <div class="mc"><div class="mc-lbl">إجمالي المصاريف</div><div class="mc-val r">${fmt(tC)} دج</div></div>
+      <div class="mc"><div class="mc-lbl">صافي السنة</div><div class="mc-val ${tN>=0?'g':'r'}">${fmt(tN)} دج</div></div>
+      <div class="mc"><div class="mc-lbl">هامش السنة</div><div class="mc-val ${marg===null?'':marg>=30?'g':marg>=10?'a':'r'}">${marg!==null?marg+'%':'—'}</div></div>
+    </div>
+  </div>`;
+}
+function jumpPeriod(y,m,hh){
+  $('sel-year').value=y;$('sel-month').value=m;$('sel-half').value=hh;cY=y;cM=m;cH=hh;
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.ni').forEach(b=>b.classList.remove('on'));
+  $('pg-bilan').classList.add('on');document.querySelector('.ni').classList.add('on');renderAll();
+}
+
+// ============================================================
+// RENDER ALL
+// ============================================================
+function renderAll(){
+  calcAll();
+  renderTeam();
+  renderBoutiques();
+  renderCFDataTbl();
+  renderSVDataTbl();
+  renderFixedRolesData();
+  renderCFPay();
+  renderMerchPay();
+  renderTeamPay();
+  renderExpenses();
+  renderTarifs();
+  renderRoles();
+  renderAnnual();
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function exportData(){
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  const payload=JSON.stringify(DB,null,2);
+  const blob=new Blob([payload],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=`paiement_data_${dateStr}.json`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast("✓ تم تصدير البيانات");
+}
+
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const parsed=JSON.parse(e.target.result);
+      if(!parsed.tms&&!parsed.boutiques)throw new Error("ملف غير صحيح");
+      if(!confirm("هذا سيستبدل كل البيانات الحالية. هل أنت متأكد؟"))return;
+      DB=parsed;
+      save();loadSettings();renderAll();
+      showToast("✓ تم استيراد البيانات بنجاح");
+    }catch(err){alert("خطأ في الملف: "+err.message);}
+    event.target.value="";
+  };
+  reader.readAsText(file);
+}
+
+function showToast(msg){
+  let t=document.getElementById("toast");
+  if(!t){t=document.createElement("div");t.id="toast";t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a18;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-family:Cairo,sans-serif;z-index:999;opacity:0;transition:opacity .3s";document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity="1";
+  setTimeout(()=>t.style.opacity="0",2500);
+}
+
+// ============================================================
+// ASYNC BOOT — Firebase first, then render
+// ============================================================
+async function asyncBoot(){
+  // 1. init selectors & defaults
+  initSelectors();
+
+  // 2. load from localStorage instantly (show UI fast)
+  load();
+  loadSettings();
+  renderAll();
+  showSyncStatus('جاري التحميل من السيرفر...', 'loading');
+
+  // 3. load from Firebase (authoritative)
+  if(window._fbLoad){
+    const remote = await window._fbLoad();
+    if(remote){
+      Object.keys(remote).forEach(k=>{
+        if(k!=='orderTypes'||remote.orderTypes?.length) DB[k]=remote[k];
+      });
+      try{localStorage.setItem('paiement_v4',JSON.stringify(DB));}catch(e){}
+      loadSettings();
+      renderAll();
+    }
+    showSyncStatus('✓ متصل — بيانات مباشرة', 'ok');
+
+    // 4. start live listener
+    startLiveSync();
+  } else {
+    showSyncStatus('⚠ وضع offline — بيانات محلية', 'warn');
+  }
+}
+
+function showSyncStatus(msg, state){
+  let el=document.getElementById('sync-status');
+  if(!el) return;
+  el.textContent=msg;
+  el.style.color=state==='ok'?'var(--grn)':state==='warn'?'var(--amb)':'var(--t2)';
+}
+
+// Called after Firebase module loads
+window._appBootPending = asyncBoot;
+
+// If Firebase already ready (cached), boot now
+if(window._fbReady) asyncBoot();
+</script>
+</body>
+</html>
