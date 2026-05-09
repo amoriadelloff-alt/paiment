@@ -161,6 +161,10 @@ footer{margin-top:26px;padding:12px 0;border-top:1px solid var(--brd);font-size:
       <option value="1">1 — 15</option>
       <option value="2">16 — 31</option>
     </select>
+    <div style="position:relative;flex:1;max-width:260px">
+      <input type="text" id="global-search" placeholder="🔍 بحث... (كونفيرماتور، تاجر، بوتيك...)" oninput="doSearch(this.value)" style="width:100%;padding:6px 10px;border:1px solid var(--brd2);border-radius:8px;font-family:Cairo,sans-serif;font-size:12px;background:var(--s2);outline:none">
+      <div id="search-results" style="display:none;position:absolute;top:calc(100% + 4px);right:0;left:0;background:var(--sur);border:1px solid var(--brd2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:400;max-height:320px;overflow-y:auto"></div>
+    </div>
     <span id="sync-status" style="font-size:11px;color:var(--t2);padding:4px 10px;background:var(--s2);border-radius:6px;border:1px solid var(--brd)">جاري التحميل...</span>
     <button class="btn btn-ghost btn-sm" onclick="exportData()" title="تصدير البيانات">📤 تصدير</button>
     <button class="btn btn-ghost btn-sm" onclick="$('import-file').click()" title="استيراد البيانات">📥 استيراد</button>
@@ -182,6 +186,7 @@ footer{margin-top:26px;padding:12px 0;border-top:1px solid var(--brd);font-size:
   <button class="ni" onclick="gp('paymerch')"><span class="ni-ico">🏪</span>دفع التجار</button>
   <button class="ni" onclick="gp('payteam')"><span class="ni-ico">👥</span>دفع الفريق</button>
   <button class="ni" onclick="gp('expenses')"><span class="ni-ico">💸</span>المصاريف</button>
+  <button class="ni" onclick="gp('revenues')"><span class="ni-ico">📈</span>المداخيل الأخرى</button>
   <div class="ns">الإعدادات</div>
   <button class="ni" onclick="gp('tarifs')"><span class="ni-ico">💰</span>التعريفات</button>
   <button class="ni" onclick="gp('salaires')"><span class="ni-ico">👔</span>الرواتب</button>
@@ -263,6 +268,23 @@ footer{margin-top:26px;padding:12px 0;border-top:1px solid var(--brd);font-size:
   <div id="team-pay-out"></div>
 </div>
 
+<!-- ===== REVENUES ===== -->
+<div id="pg-revenues" class="pg">
+  <div class="pg-hd"><div class="pg-title">داشبورد المداخيل الأخرى</div><div class="pg-sub">أضف أي مصدر دخل إضافي — شركات التوصيل، خدمات أخرى...</div></div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn btn-p" onclick="openMo('mo-rev-src')">+ إضافة مصدر دخل</button>
+  </div>
+  <div class="mg" id="rev-mg"></div>
+  <div id="rev-src-list"></div>
+  <div class="card" style="margin-top:4px">
+    <div class="card-hd" style="margin-bottom:12px">
+      <div class="card-title">📋 سجل المداخيل</div>
+      <button class="btn btn-p btn-sm" onclick="openMo('mo-rev-entry')">+ تسجيل مدخول</button>
+    </div>
+    <div id="rev-entries-list"></div>
+  </div>
+</div>
+
 <!-- ===== EXPENSES ===== -->
 <div id="pg-expenses" class="pg">
   <div class="pg-hd"><div class="pg-title">المصاريف الحرة</div></div>
@@ -323,9 +345,13 @@ footer{margin-top:26px;padding:12px 0;border-top:1px solid var(--brd);font-size:
 
 <!-- ===== ROLES ===== -->
 <div id="pg-roles" class="pg">
-  <div class="pg-hd"><div class="pg-title">المناصب الأخرى</div><div class="pg-sub">زيد أي منصب جديد في أي وقت — يُضاف تلقائياً في بيانات الفترة والميزانية</div></div>
+  <div class="pg-hd"><div class="pg-title">المناصب الأخرى</div><div class="pg-sub">كل منصب يمكن أن يكون له راتب ثابت + عمولة متغيرة (% من المداخيل أو مبلغ/طلبية)</div></div>
   <div class="card">
-    <div class="card-hd"><div class="card-title">المناصب الثابتة</div><button class="btn btn-p btn-sm" onclick="openMo('mo-role')">+ إضافة منصب</button></div>
+    <div class="card-hd"><div class="card-title">المناصب الأساسية</div></div>
+    <div id="default-roles-edit"></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><div class="card-title">مناصب مضافة</div><button class="btn btn-p btn-sm" onclick="openMo('mo-role')">+ إضافة منصب</button></div>
     <div id="roles-list"></div>
   </div>
 </div>
@@ -402,6 +428,97 @@ footer{margin-top:26px;padding:12px 0;border-top:1px solid var(--brd);font-size:
     <div class="fg"><label>الفترة المالية</label><select id="exp-per-sel"></select></div>
   </div>
   <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-exp')">إلغاء</button><button class="btn btn-p" onclick="addExp()">تسجيل</button></div>
+</div></div>
+
+<!-- Revenue source modal -->
+<div class="mo" id="mo-rev-src"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title" id="mo-rev-src-title">إضافة مصدر دخل</div><button class="mo-close" onclick="closeMo('mo-rev-src')">✕</button></div>
+  <div class="fg" style="margin-bottom:10px"><label>اسم المصدر</label><input type="text" id="rev-src-name" placeholder="DHD، Yalidine، خدمة أخرى..."></div>
+  <div class="g2" style="margin-bottom:10px">
+    <div class="fg"><label>نوع العمولة</label>
+      <select id="rev-src-type" onchange="toggleRevSrcType()">
+        <option value="per_livree">مبلغ ثابت / طلبية مستلمة</option>
+        <option value="monthly">مبلغ ثابت شهري</option>
+        <option value="percent">نسبة % من المداخيل</option>
+      </select>
+    </div>
+    <div class="fg" id="rev-src-amt-wrap"><label id="rev-src-amt-lbl">المبلغ (دج/طلبية)</label><input type="number" id="rev-src-amt" value="50" min="0" placeholder="50"></div>
+  </div>
+  <div class="fg" style="margin-bottom:14px"><label>اللون</label>
+    <select id="rev-src-color">
+      <option value="tag-g">أخضر</option><option value="tag-b">أزرق</option>
+      <option value="tag-p">بنفسجي</option><option value="tag-a">برتقالي</option>
+    </select>
+  </div>
+  <input type="hidden" id="rev-src-edit-id">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-rev-src')">إلغاء</button><button class="btn btn-p" onclick="saveRevSrc()">حفظ</button></div>
+</div></div>
+
+<!-- Revenue entry modal -->
+<div class="mo" id="mo-rev-entry"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">تسجيل مدخول</div><button class="mo-close" onclick="closeMo('mo-rev-entry')">✕</button></div>
+  <div class="g2" style="margin-bottom:10px">
+    <div class="fg"><label>المصدر</label><select id="rev-entry-src"></select></div>
+    <div class="fg"><label>البوتيك (اختياري)</label><select id="rev-entry-bq"><option value="">— الكل —</option></select></div>
+  </div>
+  <div class="g2" style="margin-bottom:10px">
+    <div class="fg"><label>عدد الطلبيات (إذا كان/طلبية)</label><input type="number" id="rev-entry-count" value="0" min="0" placeholder="0"></div>
+    <div class="fg"><label>أو مبلغ مباشر (دج)</label><input type="number" id="rev-entry-direct" value="0" min="0" placeholder="0"></div>
+  </div>
+  <div class="g2" style="margin-bottom:14px">
+    <div class="fg"><label>التاريخ</label><input type="date" id="rev-entry-date"></div>
+    <div class="fg"><label>الفترة</label><select id="rev-entry-per"></select></div>
+  </div>
+  <div class="fg" style="margin-bottom:14px"><label>ملاحظة</label><input type="text" id="rev-entry-note" placeholder=""></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-rev-entry')">إلغاء</button><button class="btn btn-p" onclick="saveRevEntry()">تسجيل</button></div>
+</div></div>
+
+<!-- Role edit modal -->
+<div class="mo" id="mo-role-edit"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title" id="mo-role-edit-title">تعديل منصب</div><button class="mo-close" onclick="closeMo('mo-role-edit')">✕</button></div>
+  <div class="fg" style="margin-bottom:10px"><label>اسم المنصب</label><input type="text" id="role-edit-name"></div>
+  <div class="fg" style="margin-bottom:10px"><label>الراتب الثابت (دج)</label><input type="number" id="role-edit-sal" min="0"></div>
+  <div class="g2" style="margin-bottom:10px">
+    <div class="fg"><label>نوع العمولة</label>
+      <select id="role-edit-comm-type">
+        <option value="none">لا توجد عمولة</option>
+        <option value="per_livree">مبلغ / طلبية مستلمة</option>
+        <option value="percent_rev">نسبة % من المداخيل</option>
+        <option value="fixed_bonus">بونوس ثابت عند هدف</option>
+      </select>
+    </div>
+    <div class="fg"><label>قيمة العمولة</label><input type="number" id="role-edit-comm-val" min="0" value="0"></div>
+  </div>
+  <div class="fg" style="margin-bottom:14px"><label>هدف للبونوس (عدد طلبيات — فقط إذا اخترت بونوس ثابت)</label><input type="number" id="role-edit-comm-target" min="0" value="0"></div>
+  <input type="hidden" id="role-edit-id">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-role-edit')">إلغاء</button><button class="btn btn-p" onclick="saveRoleEdit()">حفظ</button></div>
+</div></div>
+
+<!-- Team member edit modals -->
+<div class="mo" id="mo-edit-tm"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">تعديل Teams Manager</div><button class="mo-close" onclick="closeMo('mo-edit-tm')">✕</button></div>
+  <div class="fg" style="margin-bottom:14px"><label>الاسم</label><input type="text" id="edit-tm-name"></div>
+  <input type="hidden" id="edit-tm-id">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-edit-tm')">إلغاء</button><button class="btn btn-p" onclick="saveEditTM()">حفظ</button></div>
+</div></div>
+
+<div class="mo" id="mo-edit-sv"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">تعديل سوبرفايزر</div><button class="mo-close" onclick="closeMo('mo-edit-sv')">✕</button></div>
+  <div class="fg" style="margin-bottom:10px"><label>الاسم</label><input type="text" id="edit-sv-name"></div>
+  <div class="g2" style="margin-bottom:14px">
+    <div class="fg"><label>نوع العمل</label><select id="edit-sv-type"><option value="TLT">TLT</option><option value="2j">2j مكتب</option><option value="4j">4j مكتب</option></select></div>
+    <div class="fg"><label>Teams Manager</label><select id="edit-sv-tm"><option value="">—</option></select></div>
+  </div>
+  <input type="hidden" id="edit-sv-id">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-edit-sv')">إلغاء</button><button class="btn btn-p" onclick="saveEditSV()">حفظ</button></div>
+</div></div>
+
+<div class="mo" id="mo-edit-cf"><div class="mo-box">
+  <div class="mo-hd"><div class="mo-title">تعديل كونفيرماتور</div><button class="mo-close" onclick="closeMo('mo-edit-cf')">✕</button></div>
+  <div class="fg" style="margin-bottom:10px"><label>الاسم</label><input type="text" id="edit-cf-name"></div>
+  <div class="fg" style="margin-bottom:14px"><label>السوبرفايزر</label><select id="edit-cf-sv"><option value="">—</option></select></div>
+  <input type="hidden" id="edit-cf-id">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeMo('mo-edit-cf')">إلغاء</button><button class="btn btn-p" onclick="saveEditCF()">حفظ</button></div>
 </div></div>
 
 <div class="mo" id="mo-pay"><div class="mo-box">
@@ -514,6 +631,8 @@ function startLiveSync(){
 // ============================================================
 function gp(id){ document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on')); document.querySelectorAll('.ni').forEach(b=>b.classList.remove('on')); $('pg-'+id).classList.add('on'); event.currentTarget.classList.add('on'); renderAll(); }
 function openMo(id){
+  if(id==='mo-rev-src'){openRevSrcAdd();return;}
+  if(id==='mo-rev-entry'){openRevEntryAdd();return;}
   if(id==='mo-sv'){const s=$('sv-tm');s.innerHTML='<option value="">—</option>';DB.tms.forEach(t=>s.innerHTML+=`<option value="${t.id}">${t.name}</option>`);}
   if(id==='mo-cf'){const s=$('cf-sv');s.innerHTML='<option value="">—</option>';DB.svs.forEach(s2=>s.innerHTML+=`<option value="${s2.id}">${s2.name}</option>`);}
   if(id==='mo-bq'){
@@ -831,11 +950,13 @@ function calcAll(){
   const mgEl=$('bilan-mg');
   if(mgEl){
     const metrics=[
-      {lbl:'المداخيل',val:fmt(r.totalRev)+' دج',cls:'g'},
+      {lbl:'مداخيل الطلبيات',val:fmt(r.totalRev)+' دج',cls:'g'},
+      {lbl:'مداخيل أخرى',val:fmt(extraRevPeriod)+' دج',cls:'g'},
+      {lbl:'إجمالي المداخيل',val:fmt(trueRev)+' دج',cls:'g'},
       {lbl:'مصاريف الرواتب',val:fmt(r.totalSal)+' دج',cls:'r'},
       {lbl:'مصاريف حرة',val:fmt(r.freeExp)+' دج',cls:'a'},
-      {lbl:'صافي الربح',val:fmt(r.net)+' دج',cls:r.net>=0?'g':'r'},
-      {lbl:'هامش الربح',val:marg!==null?marg+'%':'—',cls:marg===null?'':marg>=30?'g':marg>=10?'a':'r'},
+      {lbl:'صافي الربح',val:fmt(trueNet)+' دج',cls:trueNet>=0?'g':'r'},
+      {lbl:'هامش الربح',val:trueMarg!==null?trueMarg+'%':'—',cls:trueMarg===null?'':trueMarg>=30?'g':trueMarg>=10?'a':'r'},
     ];
     mgEl.innerHTML=metrics.map(m=>`<div class="mc"><div class="mc-lbl">${m.lbl}</div><div class="mc-val ${m.cls}">${m.val}</div></div>`).join('');
   }
@@ -843,6 +964,12 @@ function calcAll(){
   // Bilan detail
   const bEl=$('bilan-detail');
   if(bEl){
+    // Extra revenues this period
+    const extraRevPeriod=(DB.revEntries||[]).filter(e=>e.period===p).reduce((s,e)=>s+e.amt,0);
+    const trueRev=r.totalRev+extraRevPeriod;
+    const trueNet=r.net+extraRevPeriod;
+    const trueMarg=trueRev>0?Math.round(trueNet/trueRev*100):null;
+
     const bqRows=DB.boutiques.map(b=>{
       const rev=r.bqRevMap[b.id]||0;
       const sv=DB.svs.find(s=>s.id===b.svId);
@@ -918,13 +1045,13 @@ function calcAll(){
 function renderTeam(){
   const tc={TLT:'tag-b','2j':'tag-g','4j':'tag-p'};
   let h='';
-  DB.tms.forEach(t=>{h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:9px;margin-bottom:7px"><div style="width:30px;height:30px;background:var(--bbg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px">👔</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${t.name}</div><div style="font-size:11px;color:var(--t2)">Teams Manager</div></div><button class="btn btn-d btn-sm" onclick="delTM('${t.id}')">حذف</button></div>`;});
+  DB.tms.forEach(t=>{h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:9px;margin-bottom:7px"><div style="width:30px;height:30px;background:var(--bbg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px">👔</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${t.name}</div><div style="font-size:11px;color:var(--t2)">Teams Manager</div></div><button class="btn btn-a btn-sm" onclick="editTM('${t.id}')">تعديل</button><button class="btn btn-d btn-sm" onclick="delTM('${t.id}')">حذف</button></div>`;});
   $('tm-list').innerHTML=h||'<div class="empty"><div class="empty-ico">👔</div><div class="empty-txt">لم يتم إضافة TM</div></div>';
   h='';
-  DB.svs.forEach(s=>{const tm=DB.tms.find(t=>t.id===s.tmId);h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:9px;margin-bottom:7px"><div style="width:30px;height:30px;background:var(--gbg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px">🎯</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--t2)">${tm?'تحت '+tm.name:''} · ${s.type}</div></div><span class="tag ${tc[s.type]}">${s.type}</span><button class="btn btn-d btn-sm" onclick="delSV('${s.id}')">حذف</button></div>`;});
+  DB.svs.forEach(s=>{const tm=DB.tms.find(t=>t.id===s.tmId);h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:9px;margin-bottom:7px"><div style="width:30px;height:30px;background:var(--gbg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px">🎯</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${s.name}</div><div style="font-size:11px;color:var(--t2)">${tm?'تحت '+tm.name:''} · ${s.type}</div></div><span class="tag ${tc[s.type]}">${s.type}</span><button class="btn btn-a btn-sm" onclick="editSV('${s.id}')">تعديل</button><button class="btn btn-d btn-sm" onclick="delSV('${s.id}')">حذف</button></div>`;});
   $('sv-list').innerHTML=h||'<div class="empty"><div class="empty-ico">🎯</div><div class="empty-txt">لم يتم إضافة SV</div></div>';
   h='';
-  DB.cfs.forEach(c=>{const sv=DB.svs.find(s=>s.id===c.svId);h+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--s2);border-radius:9px;margin-bottom:6px"><div style="width:28px;height:28px;background:var(--abg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px">📞</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${c.name}</div><div style="font-size:11px;color:var(--t2)">${sv?'تحت '+sv.name:''}</div></div><button class="btn btn-d btn-sm" onclick="delCF('${c.id}')">حذف</button></div>`;});
+  DB.cfs.forEach(c=>{const sv=DB.svs.find(s=>s.id===c.svId);h+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--s2);border-radius:9px;margin-bottom:6px"><div style="width:28px;height:28px;background:var(--abg);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px">📞</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${c.name}</div><div style="font-size:11px;color:var(--t2)">${sv?'تحت '+sv.name:''}</div></div><button class="btn btn-a btn-sm" onclick="editCF('${c.id}')">تعديل</button><button class="btn btn-d btn-sm" onclick="delCF('${c.id}')">حذف</button></div>`;});
   $('cf-list').innerHTML=h||'<div class="empty"><div class="empty-ico">📞</div><div class="empty-txt">لم يتم إضافة كونفيرماتور</div></div>';
 }
 
@@ -1372,10 +1499,254 @@ function renderAll(){
   renderMerchPay();
   renderTeamPay();
   renderExpenses();
+  renderRevenues();
   renderTarifs();
   renderRoles();
   renderAnnual();
 }
+
+// ============================================================
+// SEARCH
+// ============================================================
+function doSearch(q){
+  const box=$('search-results');
+  if(!q||q.length<2){box.style.display='none';return;}
+  q=q.toLowerCase();
+  const results=[];
+  DB.cfs.forEach(cf=>{if(cf.name.toLowerCase().includes(q))results.push({type:'CF',label:cf.name,sub:'كونفيرماتور',pg:'team'});});
+  DB.svs.forEach(sv=>{if(sv.name.toLowerCase().includes(q))results.push({type:'SV',label:sv.name,sub:'سوبرفايزر',pg:'team'});});
+  DB.tms.forEach(tm=>{if(tm.name.toLowerCase().includes(q))results.push({type:'TM',label:tm.name,sub:'Teams Manager',pg:'team'});});
+  DB.boutiques.forEach(b=>{
+    if(b.name.toLowerCase().includes(q)||b.merchant.toLowerCase().includes(q))
+      results.push({type:'BQ',label:b.name,sub:'بوتيك — '+b.merchant,pg:'boutiques'});
+  });
+  (DB.revSources||[]).forEach(s=>{if(s.name.toLowerCase().includes(q))results.push({type:'REV',label:s.name,sub:'مصدر دخل',pg:'revenues'});});
+  (DB.roles||[]).forEach(r=>{if(r.name.toLowerCase().includes(q))results.push({type:'ROLE',label:r.name,sub:'منصب',pg:'roles'});});
+  if(!results.length){box.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--t3)">لا توجد نتائج</div>';box.style.display='block';return;}
+  const icons={CF:'📞',SV:'🎯',TM:'👔',BQ:'🏪',REV:'📈',ROLE:'👤'};
+  box.innerHTML=results.slice(0,8).map(r=>`<div onclick="searchGo('${r.pg}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background=''">
+    <span style="font-size:16px">${icons[r.type]||'•'}</span>
+    <div><div style="font-size:13px;font-weight:600">${r.label}</div><div style="font-size:11px;color:var(--t2)">${r.sub}</div></div>
+  </div>`).join('');
+  box.style.display='block';
+}
+function searchGo(pg){
+  $('search-results').style.display='none';$('global-search').value='';
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('on'));
+  $('pg-'+pg).classList.add('on');
+  renderAll();
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#global-search')&&!e.target.closest('#search-results'))if($('search-results'))$('search-results').style.display='none';});
+
+// ============================================================
+// TEAM EDIT
+// ============================================================
+function editTM(id){const t=DB.tms.find(x=>x.id===id);if(!t)return;$('edit-tm-name').value=t.name;$('edit-tm-id').value=id;$('mo-edit-tm').classList.add('open');}
+function saveEditTM(){const id=$('edit-tm-id').value,n=$('edit-tm-name').value.trim();if(!n)return;const t=DB.tms.find(x=>x.id===id);if(t)t.name=n;save();closeMo('mo-edit-tm');renderTeam();}
+
+function editSV(id){
+  const s=DB.svs.find(x=>x.id===id);if(!s)return;
+  $('edit-sv-name').value=s.name;$('edit-sv-type').value=s.type;$('edit-sv-id').value=id;
+  const sel=$('edit-sv-tm');sel.innerHTML='<option value="">—</option>';DB.tms.forEach(t=>sel.innerHTML+=`<option value="${t.id}" ${t.id===s.tmId?'selected':''}>${t.name}</option>`);
+  $('mo-edit-sv').classList.add('open');
+}
+function saveEditSV(){const id=$('edit-sv-id').value,n=$('edit-sv-name').value.trim();if(!n)return;const s=DB.svs.find(x=>x.id===id);if(s){s.name=n;s.type=$('edit-sv-type').value;s.tmId=$('edit-sv-tm').value;}save();closeMo('mo-edit-sv');renderTeam();}
+
+function editCF(id){
+  const c=DB.cfs.find(x=>x.id===id);if(!c)return;
+  $('edit-cf-name').value=c.name;$('edit-cf-id').value=id;
+  const sel=$('edit-cf-sv');sel.innerHTML='<option value="">—</option>';DB.svs.forEach(s=>sel.innerHTML+=`<option value="${s.id}" ${s.id===c.svId?'selected':''}>${s.name}</option>`);
+  $('mo-edit-cf').classList.add('open');
+}
+function saveEditCF(){const id=$('edit-cf-id').value,n=$('edit-cf-name').value.trim();if(!n)return;const c=DB.cfs.find(x=>x.id===id);if(c){c.name=n;c.svId=$('edit-cf-sv').value;}save();closeMo('mo-edit-cf');renderTeam();}
+
+// ============================================================
+// ROLES WITH COMMISSION
+// ============================================================
+const DEFAULT_ROLES=[
+  {id:'coord',name:'Coordinateur Manager',salary:65000,commType:'none',commVal:0,commTarget:0},
+  {id:'resp', name:'Responsable Paiement', salary:65000,commType:'none',commVal:0,commTarget:0},
+  {id:'smm',  name:'Social Media Manager', salary:80000,commType:'none',commVal:0,commTarget:0},
+  {id:'hr',   name:'HR',                   salary:80000,commType:'none',commVal:0,commTarget:0},
+  {id:'agent',name:'Agent Commercial TLT', salary:40000,commType:'per_livree',commVal:1000,commTarget:7},
+];
+
+function getAllRoles(){
+  // merge default with saved overrides
+  const saved=DB.roleOverrides||{};
+  const base=DEFAULT_ROLES.map(r=>({...r,...(saved[r.id]||{})}));
+  return [...base,...(DB.roles||[])];
+}
+
+function openRoleEdit(id){
+  const all=getAllRoles();
+  const r=all.find(x=>x.id===id);
+  if(!r)return;
+  $('role-edit-id').value=id;
+  $('role-edit-name').value=r.name;
+  $('role-edit-sal').value=r.salary||0;
+  $('role-edit-comm-type').value=r.commType||'none';
+  $('role-edit-comm-val').value=r.commVal||0;
+  $('role-edit-comm-target').value=r.commTarget||0;
+  $('mo-role-edit-title').textContent='تعديل — '+r.name;
+  $('mo-role-edit').classList.add('open');
+}
+
+function saveRoleEdit(){
+  const id=$('role-edit-id').value;
+  const data={name:$('role-edit-name').value.trim(),salary:+$('role-edit-sal').value,commType:$('role-edit-comm-type').value,commVal:+$('role-edit-comm-val').value,commTarget:+$('role-edit-comm-target').value};
+  const isDefault=DEFAULT_ROLES.some(r=>r.id===id);
+  if(isDefault){if(!DB.roleOverrides)DB.roleOverrides={};DB.roleOverrides[id]=data;}
+  else{const r=DB.roles.find(x=>x.id===id);if(r)Object.assign(r,data);}
+  save();closeMo('mo-role-edit');renderRoles();calcAll();
+}
+
+function addRole(){
+  const n=$('role-name').value.trim();if(!n)return alert('أدخل الاسم');
+  DB.roles.push({id:uid(),name:n,salary:+$('role-sal').value||0,commType:'none',commVal:0,commTarget:0});
+  $('role-name').value='';save();closeMo('mo-role');renderRoles();renderFixedRolesData();
+}
+function delRole(id){if(!confirm('حذف؟'))return;DB.roles=DB.roles.filter(r=>r.id!==id);save();renderRoles();renderFixedRolesData();}
+
+function renderRoles(){
+  const drEl=$('default-roles-edit');const rEl=$('roles-list');
+  if(!drEl||!rEl)return;
+  const commLbl={none:'لا عمولة',per_livree:'مبلغ/طلبية',percent_rev:'% من المداخيل',fixed_bonus:'بونوس ثابت'};
+  const all=getAllRoles();
+  const defaults=all.filter(r=>DEFAULT_ROLES.some(d=>d.id===r.id));
+  const extras=all.filter(r=>!DEFAULT_ROLES.some(d=>d.id===r.id));
+  const row=(r)=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--brd);flex-wrap:wrap">
+    <div style="flex:1;min-width:140px"><div style="font-size:13px;font-weight:700">${r.name}</div>
+    <div style="font-size:11px;color:var(--t2)">${fmt(r.salary||0)} دج ثابت · ${commLbl[r.commType||'none']}${r.commVal?': '+r.commVal+(r.commType==='percent_rev'?'%':' دج'):''}</div></div>
+    <button class="btn btn-a btn-sm" onclick="openRoleEdit('${r.id}')">تعديل</button>
+    ${!DEFAULT_ROLES.some(d=>d.id===r.id)?`<button class="btn btn-d btn-sm" onclick="delRole('${r.id}')">حذف</button>`:''}
+  </div>`;
+  drEl.innerHTML=defaults.map(row).join('');
+  rEl.innerHTML=extras.length?extras.map(row).join(''):'<div class="empty"><div class="empty-ico">➕</div><div class="empty-txt">لم تتم إضافة مناصب بعد</div></div>';
+}
+
+function renderDefaultRolesEdit(){renderRoles();}
+
+// ============================================================
+// REVENUE SOURCES
+// ============================================================
+function toggleRevSrcType(){
+  const t=$('rev-src-type').value;
+  $('rev-src-amt-lbl').textContent=t==='per_livree'?'المبلغ (دج/طلبية)':t==='percent'?'النسبة (%)':'المبلغ الشهري (دج)';
+}
+
+function openRevSrcAdd(){
+  $('mo-rev-src-title').textContent='إضافة مصدر دخل';
+  $('rev-src-name').value='';$('rev-src-amt').value='50';
+  $('rev-src-edit-id').value='';$('rev-src-type').value='per_livree';$('rev-src-color').value='tag-g';
+  $('mo-rev-src').classList.add('open');
+}
+
+function editRevSrc(id){
+  const s=(DB.revSources||[]).find(x=>x.id===id);if(!s)return;
+  $('mo-rev-src-title').textContent='تعديل — '+s.name;
+  $('rev-src-name').value=s.name;$('rev-src-amt').value=s.amt||0;
+  $('rev-src-type').value=s.type||'per_livree';$('rev-src-color').value=s.color||'tag-g';
+  $('rev-src-edit-id').value=id;
+  $('mo-rev-src').classList.add('open');
+}
+
+function saveRevSrc(){
+  const editId=$('rev-src-edit-id').value;
+  const data={name:$('rev-src-name').value.trim(),type:$('rev-src-type').value,amt:+$('rev-src-amt').value,color:$('rev-src-color').value};
+  if(!data.name)return alert('أدخل الاسم');
+  if(!DB.revSources)DB.revSources=[];
+  if(editId){const s=DB.revSources.find(x=>x.id===editId);if(s)Object.assign(s,data);}
+  else DB.revSources.push({id:uid(),...data});
+  save();closeMo('mo-rev-src');renderRevenues();
+}
+
+function delRevSrc(id){if(!confirm('حذف هذا المصدر؟'))return;DB.revSources=(DB.revSources||[]).filter(x=>x.id!==id);save();renderRevenues();}
+
+function openRevEntryAdd(){
+  const pk2=pk();
+  $('rev-entry-date').value=new Date().toISOString().split('T')[0];
+  // fill source select
+  const ss=$('rev-entry-src');ss.innerHTML='';
+  (DB.revSources||[]).forEach(s=>ss.innerHTML+=`<option value="${s.id}">${s.name}</option>`);
+  // fill boutique select
+  const bs=$('rev-entry-bq');bs.innerHTML='<option value="">— الكل —</option>';
+  DB.boutiques.forEach(b=>bs.innerHTML+=`<option value="${b.id}">${b.name}</option>`);
+  // fill period
+  const ps=$('rev-entry-per');ps.innerHTML='';
+  for(let m=1;m<=12;m++){ps.innerHTML+=`<option value="${cY}-${m}-1">${MONTHS[m-1]} 1-15</option>`;ps.innerHTML+=`<option value="${cY}-${m}-2">${MONTHS[m-1]} 16-31</option>`;}
+  ps.value=pk2;
+  $('rev-entry-count').value=0;$('rev-entry-direct').value=0;$('rev-entry-note').value='';
+  $('mo-rev-entry').classList.add('open');
+}
+
+function saveRevEntry(){
+  const srcId=$('rev-entry-src').value;if(!srcId)return alert('اختر المصدر');
+  const src=(DB.revSources||[]).find(s=>s.id===srcId);if(!src)return;
+  const count=+$('rev-entry-count').value||0;
+  const direct=+$('rev-entry-direct').value||0;
+  const amt=direct>0?direct:(count*(src.amt||0));
+  if(!amt)return alert('أدخل عدد الطلبيات أو المبلغ');
+  if(!DB.revEntries)DB.revEntries=[];
+  DB.revEntries.push({id:uid(),srcId,bqId:$('rev-entry-bq').value,count,direct,amt,period:$('rev-entry-per').value,date:$('rev-entry-date').value,note:$('rev-entry-note').value});
+  save();closeMo('mo-rev-entry');renderRevenues();calcAll();
+}
+
+function delRevEntry(id){DB.revEntries=(DB.revEntries||[]).filter(x=>x.id!==id);save();renderRevenues();calcAll();}
+
+function renderRevenues(){
+  const revMg=$('rev-mg');const srcList=$('rev-src-list');const entriesList=$('rev-entries-list');
+  if(!revMg||!srcList||!entriesList)return;
+  const p=pk();
+  const entries=DB.revEntries||[];
+  const sources=DB.revSources||[];
+  const totAll=entries.reduce((s,e)=>s+e.amt,0);
+  const totPeriod=entries.filter(e=>e.period===p).reduce((s,e)=>s+e.amt,0);
+  revMg.innerHTML=`
+    <div class="mc"><div class="mc-lbl">إجمالي كل المداخيل</div><div class="mc-val g">${fmt(totAll)} دج</div></div>
+    <div class="mc"><div class="mc-lbl">هذه الفترة</div><div class="mc-val g">${fmt(totPeriod)} دج</div></div>
+    <div class="mc"><div class="mc-lbl">عدد المصادر</div><div class="mc-val b">${sources.length}</div></div>
+    <div class="mc"><div class="mc-lbl">عدد السجلات</div><div class="mc-val b">${entries.length}</div></div>`;
+
+  if(!sources.length){srcList.innerHTML='<div class="card"><div class="empty"><div class="empty-ico">📈</div><div class="empty-txt">لم يتم إضافة مصادر دخل بعد</div></div></div>';} 
+  else {
+    const typeL={per_livree:'دج/طلبية',monthly:'شهري',percent:'%'};
+    srcList.innerHTML='<div class="card"><div class="card-hd" style="margin-bottom:10px"><div class="card-title">مصادر الدخل</div></div>'+
+    sources.map(s=>{
+      const tot=entries.filter(e=>e.srcId===s.id).reduce((x,e)=>x+e.amt,0);
+      const perPeriod=entries.filter(e=>e.srcId===s.id&&e.period===p).reduce((x,e)=>x+e.amt,0);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--brd);flex-wrap:wrap">
+        <span class="tag ${s.color||'tag-g'}" style="min-width:80px;text-align:center">${s.name}</span>
+        <div style="flex:1"><div style="font-size:12px;color:var(--t2)">${s.amt} ${typeL[s.type]||''}</div></div>
+        <div style="font-size:12px;text-align:left"><div>الفترة: <strong class="g">${fmt(perPeriod)} دج</strong></div><div>الإجمالي: <strong>${fmt(tot)} دج</strong></div></div>
+        <button class="btn btn-a btn-sm" onclick="editRevSrc('${s.id}')">تعديل</button>
+        <button class="btn btn-d btn-sm" onclick="delRevSrc('${s.id}')">حذف</button>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  if(!entries.length){entriesList.innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">لا توجد سجلات بعد</div></div>';return;}
+  let h=`<div style="overflow-x:auto"><table><thead><tr><th>التاريخ</th><th>المصدر</th><th>البوتيك</th><th>عدد طلبيات</th><th>المبلغ</th><th>الفترة</th><th>ملاحظة</th><th></th></tr></thead><tbody>`;
+  [...entries].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(e=>{
+    const src=sources.find(s=>s.id===e.srcId);
+    const bq=DB.boutiques.find(b=>b.id===e.bqId);
+    h+=`<tr>
+      <td style="font-size:11px;color:var(--t2)">${e.date||'—'}</td>
+      <td><span class="tag ${src?.color||'tag-g'}">${src?.name||'—'}</span></td>
+      <td style="font-size:11px">${bq?.name||'الكل'}</td>
+      <td>${e.count||'—'}</td>
+      <td><strong class="g">${fmt(e.amt)} دج</strong></td>
+      <td><span class="tag ${e.period===p?'tag-b':'tag-g'}" style="font-size:9px">${pLbl(e.period)}</span></td>
+      <td style="font-size:11px;color:var(--t2)">${e.note||''}</td>
+      <td><button class="btn btn-d btn-sm" onclick="delRevEntry('${e.id}')">حذف</button></td>
+    </tr>`;
+  });
+  entriesList.innerHTML=h+'</tbody></table></div>';
+}
+
+// Update openMo to handle new modals
+const _origOpenMo = window.openMo || function(){};
 
 // ============================================================
 // EXPORT / IMPORT
