@@ -556,19 +556,8 @@ let cfTab='period', mTab='period', tTab='month', aTab='rev';
 // BOOTSTRAP
 // ============================================================
 function boot(){
-  // Default order types
-  DB.orderTypes=[
-    {id:'gadget',   label:'Gadget ليفري',           merchantPrice:140, cfComm:60,  color:'tag-b'},
-    {id:'cosmetic', label:'Cosmetic ليفري',          merchantPrice:160, cfComm:60,  color:'tag-p'},
-    {id:'qb',       label:'QB / Upsell / Crossell',  merchantPrice:250, cfComm:100, color:'tag-g'},
-    {id:'pa',       label:'Panier Abandonné',         merchantPrice:200, cfComm:90,  color:'tag-a'},
-    {id:'cne',      label:'Confirmer non envoyé',     merchantPrice:100, cfComm:45,  color:'tag-r'},
-  ];
-  DB.settings={svTLTfix:40000,sv2jfix:50000,sv4jfix:60000,svObjL:1000,svPrimeL:4000,svObjQ:1000,svPrimeQ:10000,tmFix:100000,tmObjL:10000,tmPrimeL:5000,tmObjQ:2500,tmPrimeQ:10000};
-  load();
-  initSelectors();
-  loadSettings();
-  renderAll();
+  // boot() no longer called directly — asyncBoot handles everything
+  // kept for compatibility only
 }
 
 // ============================================================
@@ -1792,32 +1781,45 @@ function showToast(msg){
 // ASYNC BOOT — Firebase first, then render
 // ============================================================
 async function asyncBoot(){
-  // 1. init selectors & defaults
+  // 1. init selectors only (NO defaults yet)
   initSelectors();
-
-  // 2. load from localStorage instantly (show UI fast)
-  load();
-  loadSettings();
-  renderAll();
   showSyncStatus('جاري التحميل من السيرفر...', 'loading');
 
-  // 3. load from Firebase (authoritative)
+  // 2. Try Firebase FIRST (authoritative source)
   if(window._fbLoad){
     const remote = await window._fbLoad();
-    if(remote){
-      Object.keys(remote).forEach(k=>{
-        if(k!=='orderTypes'||remote.orderTypes?.length) DB[k]=remote[k];
-      });
+    if(remote && (remote.tms?.length || remote.boutiques?.length || remote.svs?.length)){
+      // Firebase has real data — use it, ignore defaults
+      Object.keys(remote).forEach(k=>{ DB[k]=remote[k]; });
       try{localStorage.setItem('paiement_v4',JSON.stringify(DB));}catch(e){}
       loadSettings();
       renderAll();
+      showSyncStatus('✓ متصل — بيانات مباشرة', 'ok');
+      startLiveSync();
+      return;
     }
-    showSyncStatus('✓ متصل — بيانات مباشرة', 'ok');
+  }
 
-    // 4. start live listener
+  // 3. Firebase empty or offline — try localStorage
+  load();
+  // Only apply defaults if truly empty
+  if(!DB.orderTypes?.length){
+    DB.orderTypes=[
+      {id:'gadget',   label:'Gadget ليفري',           merchantPrice:140, cfComm:60,  color:'tag-b'},
+      {id:'cosmetic', label:'Cosmetic ليفري',          merchantPrice:160, cfComm:60,  color:'tag-p'},
+      {id:'qb',       label:'QB / Upsell / Crossell',  merchantPrice:250, cfComm:100, color:'tag-g'},
+      {id:'pa',       label:'Panier Abandonné',         merchantPrice:200, cfComm:90,  color:'tag-a'},
+      {id:'cne',      label:'Confirmer non envoyé',     merchantPrice:100, cfComm:45,  color:'tag-r'},
+    ];
+  }
+  loadSettings();
+  renderAll();
+
+  if(window._fbLoad){
+    showSyncStatus('✓ متصل — بيانات محلية', 'ok');
     startLiveSync();
   } else {
-    showSyncStatus('⚠ وضع offline — بيانات محلية', 'warn');
+    showSyncStatus('⚠ وضع offline', 'warn');
   }
 }
 
