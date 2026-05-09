@@ -599,19 +599,19 @@ function load(){
 }
 
 let _listenUnsubscribe=null;
+let _bootDone=false;
 function startLiveSync(){
   if(_listenUnsubscribe) return;
   if(!window._fbListen) return;
   _listenUnsubscribe=window._fbListen(function(remoteDB){
-    // merge remote into DB — remote wins for data fields
-    const localPeriod=cY+'-'+cM+'-'+cH;
-    Object.keys(remoteDB).forEach(k=>{
-      if(k!=='orderTypes'||remoteDB.orderTypes?.length) DB[k]=remoteDB[k];
-    });
+    // Only update if remote has real data
+    if(!remoteDB || (!remoteDB.tms?.length && !remoteDB.boutiques?.length && !remoteDB.svs?.length && !remoteDB.cfs?.length)) return;
+    Object.keys(remoteDB).forEach(k=>{ DB[k]=remoteDB[k]; });
     try{localStorage.setItem('paiement_v4',JSON.stringify(DB));}catch(e){}
     loadSettings();
     renderAll();
-    showToast('🔄 بيانات محدثة من السيرفر');
+    if(_bootDone) showToast('🔄 بيانات محدثة');
+    _bootDone=true;
   });
 }
 
@@ -1795,6 +1795,7 @@ async function asyncBoot(){
       loadSettings();
       renderAll();
       showSyncStatus('✓ متصل — بيانات مباشرة', 'ok');
+      _bootDone=true;
       startLiveSync();
       return;
     }
