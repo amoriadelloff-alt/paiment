@@ -4,10 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>قسم المدفوعات — AMORIA</title>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyCHGS6F3sfmon6i2ldSoMA5TaF0hpKR8zY",
   authDomain: "paiement-app-f73df.firebaseapp.com",
@@ -17,27 +16,27 @@ const firebaseConfig = {
   appId: "1:1019316939373:web:3433a07852972c1922ed64"
 };
 
-const fbApp = initializeApp(firebaseConfig);
-const fbDB  = getFirestore(fbApp);
-const COLL  = "paiement";
+firebase.initializeApp(firebaseConfig);
+const fbDB = firebase.firestore();
+const COLL = "paiement";
 const DOCID = "main";
 
 window._fbSave = async function(data) {
-  try { await setDoc(doc(fbDB, COLL, DOCID), { payload: JSON.stringify(data) }); }
+  try { await fbDB.collection(COLL).doc(DOCID).set({ payload: JSON.stringify(data) }); }
   catch(e) { console.error("FB save:", e); }
 };
 
 window._fbLoad = async function() {
   try {
-    const snap = await getDoc(doc(fbDB, COLL, DOCID));
-    if(snap.exists()) return JSON.parse(snap.data().payload);
+    const snap = await fbDB.collection(COLL).doc(DOCID).get();
+    if(snap.exists) return JSON.parse(snap.data().payload);
   } catch(e) { console.error("FB load:", e); }
   return null;
 };
 
 window._fbListen = function(cb) {
-  return onSnapshot(doc(fbDB, COLL, DOCID), snap => {
-    if(snap.exists()) { try { cb(JSON.parse(snap.data().payload)); } catch(e){} }
+  return fbDB.collection(COLL).doc(DOCID).onSnapshot(snap => {
+    if(snap.exists) { try { cb(JSON.parse(snap.data().payload)); } catch(e){} }
   });
 };
 
